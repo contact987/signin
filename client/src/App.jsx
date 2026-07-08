@@ -13,6 +13,8 @@ export default function App() {
   // screen. Lives here (not in SignupForm) so it survives the brief
   // auto-login/logout that signup triggers when email confirmation is off.
   const [justSignedUp, setJustSignedUp] = useState(false);
+  // Which role to open the Studio OS in — chosen on the sign-in page.
+  const [role, setRole] = useState('partner'); // 'partner' | 'employee'
 
   useEffect(() => {
     // Grab any existing session on load (survives page refresh)...
@@ -32,7 +34,7 @@ export default function App() {
 
   // Once logged in (and not mid-signup), show the full-screen Studio OS app.
   if (session && !justSignedUp) {
-    return <LoggedIn session={session} />;
+    return <LoggedIn session={session} role={role} />;
   }
 
   // Otherwise show the centered auth card (login / signup / signup-success).
@@ -52,7 +54,11 @@ export default function App() {
         {justSignedUp ? (
           <SignupSuccess onGoToLogin={() => setJustSignedUp(false)} />
         ) : (
-          <AuthPanel onSignedUp={() => setJustSignedUp(true)} />
+          <AuthPanel
+            onSignedUp={() => setJustSignedUp(true)}
+            role={role}
+            onRole={setRole}
+          />
         )}
       </div>
     </div>
@@ -60,11 +66,14 @@ export default function App() {
 }
 
 /** Login / Sign Up tabbed panel, shown when logged out. */
-function AuthPanel({ onSignedUp }) {
+function AuthPanel({ onSignedUp, role, onRole }) {
   const [tab, setTab] = useState('login'); // 'login' | 'signup'
 
   return (
     <div className="bg-white rounded-xl shadow p-6">
+      {/* Account type chooser — applies to both Log In and Sign Up. */}
+      <RoleToggle role={role} onRole={onRole} />
+
       {/* Tabs */}
       <div className="flex mb-6 border-b border-slate-200">
         <TabButton active={tab === 'login'} onClick={() => setTab('login')}>
@@ -80,6 +89,38 @@ function AuthPanel({ onSignedUp }) {
       ) : (
         <SignupForm onSignedUp={onSignedUp} />
       )}
+    </div>
+  );
+}
+
+// The two account types. Labels are what the user sees; `value` is the role
+// the Studio OS understands (Supervisor = partner, Expert = employee).
+const ROLE_OPTIONS = [
+  { value: 'partner', label: 'Supervisor' },
+  { value: 'employee', label: 'Expert' },
+];
+
+/** Supervisor / Expert chooser shown at the top of the sign-in page. */
+function RoleToggle({ role, onRole }) {
+  return (
+    <div className="mb-5">
+      <span className="text-sm font-medium text-slate-700">I am a</span>
+      <div className="mt-1 flex gap-2">
+        {ROLE_OPTIONS.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => onRole(value)}
+            className={`flex-1 rounded-md py-2 text-sm font-medium border transition-colors ${
+              role === value
+                ? 'bg-indigo-600 border-indigo-600 text-white'
+                : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -200,12 +241,13 @@ function SignupSuccess({ onGoToLogin }) {
  * Logged-in view: shows the full-screen Sugar Shot Studio OS (served as a
  * static page from /studio.html) with a small floating Log out button.
  */
-function LoggedIn({ session }) {
+function LoggedIn({ session, role }) {
   return (
     <div className="fixed inset-0">
-      {/* The Studio OS prototype fills the whole screen. */}
+      {/* The Studio OS prototype fills the whole screen, opened in the role
+          chosen on the sign-in page. */}
       <iframe
-        src="/studio.html"
+        src={`/studio.html?role=${role}`}
         title="Sugar Shot Studio OS"
         className="w-full h-full border-0"
       />

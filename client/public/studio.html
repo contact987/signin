@@ -116,10 +116,6 @@ tr:hover td{background:#FAFAFE}
 <div class="sb" id="sb">
   <div class="sb-logo">🎬 Sugar Shot</div>
   <div class="sb-sub">Private Limited</div>
-  <div class="rtog">
-    <button class="rbtn on" id="rbp" onclick="setRole('partner')">Partner</button>
-    <button class="rbtn" id="rbe" onclick="setRole('employee')">Employee</button>
-  </div>
   <div id="usw"></div>
   <nav id="nav"></nav>
   <div class="sbu">
@@ -241,7 +237,7 @@ const S={
 function uopts(sel){return USERS.map(u=>`<option value="${u}"${u===sel?' selected':''}>${u}</option>`).join('');}
 function uoptsB(sel){return`<option value="">—</option>`+uopts(sel);}
 function calcL(l){const ta=Math.round(l.amt*l.taxPct/100);const tot=l.amt+ta;const tdsAmt=Math.round(tot*l.tdsPct/100);const at=tot-tdsAmt;return{ta,tot,tdsAmt,at,ytc:l.pay==='Cleared'?0:at};}
-function setRole(r){S.role=r;if(r==='partner')S.user='Anirudh Venkatachalam';document.getElementById('rbp').className='rbtn'+(r==='partner'?' on':'');document.getElementById('rbe').className='rbtn'+(r==='employee'?' on':'');if(!NAV.find(n=>n.id===S.view)?.r.includes(r))S.view='dashboard';const uw=document.getElementById('usw');uw.innerHTML=r==='employee'?`<div class="usw"><div style="font-size:9px;color:#4B5563;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Session as</div><select style="width:100%;background:transparent;border:none;color:#D1D5DB;font-size:11px;outline:none;cursor:pointer" onchange="S.user=this.value;document.getElementById('sb-nm').textContent=this.value;render()">${uopts(S.user)}</select></div>`:'';if(r==='partner')S.user='Anirudh Venkatachalam';document.getElementById('sb-nm').textContent=S.user;rnav();render();}
+function setRole(r){S.role=r;if(r==='partner')S.user='Anirudh Venkatachalam';const _rbp=document.getElementById('rbp');if(_rbp)_rbp.className='rbtn'+(r==='partner'?' on':'');const _rbe=document.getElementById('rbe');if(_rbe)_rbe.className='rbtn'+(r==='employee'?' on':'');if(!NAV.find(n=>n.id===S.view)?.r.includes(r))S.view='dashboard';const uw=document.getElementById('usw');uw.innerHTML=r==='employee'?`<div class="usw"><div style="font-size:9px;color:#4B5563;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Session as</div><select style="width:100%;background:transparent;border:none;color:#D1D5DB;font-size:11px;outline:none;cursor:pointer" onchange="S.user=this.value;document.getElementById('sb-nm').textContent=this.value;render()">${uopts(S.user)}</select></div>`:'';if(r==='partner')S.user='Anirudh Venkatachalam';document.getElementById('sb-nm').textContent=S.user;rnav();render();}
 function nav2(v){S.view=v;S.selProj=null;rnav();render();}
 function rnav(){document.getElementById('nav').innerHTML=NAV.filter(n=>n.r.includes(S.role)).map(n=>`<button class="nbtn${n.id===S.view?' on':''}" onclick="nav2('${n.id}')">${n.ic} ${n.lb}</button>`).join('');}
 function syncMaster(){S.cards.filter(c=>!c.del&&['WON','WIP','CLOSED'].includes(c.status)).forEach(card=>{if(!S.MASTER.find(m=>m.cardId===card.id)){const v=card.value,g=Math.round(v*.18);S.MASTER.push({id:S.nid.master++,cardId:card.id,brand:card.client,proj:card.project,cpoc:'',ipoc:card.poc,status:card.status==='CLOSED'?'Completed':card.status==='WON'?'Won':'In Progress',val:v,gst:g,tot:v+g,po:'No',inv:'Not Raised',pay:'Not Paid',date:card.date});}});}
@@ -317,8 +313,9 @@ function sm(html){document.getElementById('mc').innerHTML=html;document.getEleme
 function hm(){document.getElementById('mov').className='mov';}
 function conf(){const el=document.getElementById('cf');el.style.display='block';el.innerHTML='';const colors=['#F97316','#FFD600','#4ADE80','#818CF8','#FB7185','#38BDF8'];for(let i=0;i<55;i++){const d=document.createElement('div');d.className='cp';d.style.cssText=`left:${Math.random()*100}%;top:-20px;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[i%colors.length]};animation-delay:${Math.random()*0.5}s;animation-duration:${1.8+Math.random()*0.8}s`;el.appendChild(d);}setTimeout(()=>{el.style.display='none';el.innerHTML='';},3200);}
 syncMaster();
-rnav();
-render();
+// Role is chosen on the sign-in page and passed in as ?role=partner|employee.
+const _r=new URLSearchParams(location.search).get('role');
+setRole(_r==='employee'?'employee':'partner');
 </script>
 </body>
 </html>

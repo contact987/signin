@@ -29,15 +29,13 @@ export default function App() {
   // Decide which screen to show. The "just signed up" confirmation takes
   // priority over the session so a transient signup session can't flash the
   // logged-in view.
-  let screen;
-  if (justSignedUp) {
-    screen = <SignupSuccess onGoToLogin={() => setJustSignedUp(false)} />;
-  } else if (session) {
-    screen = <LoggedIn session={session} />;
-  } else {
-    screen = <AuthPanel onSignedUp={() => setJustSignedUp(true)} />;
+
+  // Once logged in (and not mid-signup), show the full-screen Studio OS app.
+  if (session && !justSignedUp) {
+    return <LoggedIn session={session} />;
   }
 
+  // Otherwise show the centered auth card (login / signup / signup-success).
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -51,7 +49,11 @@ export default function App() {
             project URL and anon key, then reload. Auth won’t work until then.
           </div>
         )}
-        {screen}
+        {justSignedUp ? (
+          <SignupSuccess onGoToLogin={() => setJustSignedUp(false)} />
+        ) : (
+          <AuthPanel onSignedUp={() => setJustSignedUp(true)} />
+        )}
       </div>
     </div>
   );
@@ -194,18 +196,25 @@ function SignupSuccess({ onGoToLogin }) {
   );
 }
 
-/** Logged-in view: a simple "Test successful" screen with logout. */
+/**
+ * Logged-in view: shows the full-screen Sugar Shot Studio OS (served as a
+ * static page from /studio.html) with a small floating Log out button.
+ */
 function LoggedIn({ session }) {
   return (
-    <div className="bg-white rounded-xl shadow p-6 space-y-4 text-center">
-      <p className="text-2xl font-semibold text-green-700">Test successful</p>
-      <p className="text-sm text-slate-600">
-        Signed in as <span className="font-medium">{session.user.email}</span>
-      </p>
+    <div className="fixed inset-0">
+      {/* The Studio OS prototype fills the whole screen. */}
+      <iframe
+        src="/studio.html"
+        title="Sugar Shot Studio OS"
+        className="w-full h-full border-0"
+      />
 
+      {/* Floating logout control, top-right corner. */}
       <button
         onClick={() => supabase.auth.signOut()}
-        className="w-full text-sm text-slate-500 hover:text-slate-700 pt-2"
+        title={`Signed in as ${session.user.email}`}
+        className="fixed top-3 right-3 z-50 bg-white/90 hover:bg-white text-slate-700 text-xs font-medium rounded-md shadow px-3 py-1.5"
       >
         Log out
       </button>

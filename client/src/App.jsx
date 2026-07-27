@@ -242,24 +242,25 @@ function SignupSuccess({ onGoToLogin }) {
  * static page from /studio.html) with a small floating Log out button.
  */
 function LoggedIn({ session, role }) {
+  // The Studio's own "Log out" button (in its sidebar) posts a message to this
+  // parent window; we catch it here and sign out via Supabase.
+  useEffect(() => {
+    function onMessage(e) {
+      if (e.data && e.data.type === 'sso-logout') supabase.auth.signOut();
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
   return (
     <div className="fixed inset-0">
       {/* The Studio OS prototype fills the whole screen, opened in the role
-          chosen on the sign-in page. */}
+          chosen on the sign-in page. Logout lives in its sidebar. */}
       <iframe
         src={`/studio.html?role=${role}`}
         title="Sugar Shot Studio OS"
         className="w-full h-full border-0"
       />
-
-      {/* Floating logout control, top-right corner. */}
-      <button
-        onClick={() => supabase.auth.signOut()}
-        title={`Signed in as ${session.user.email}`}
-        className="fixed top-3 right-3 z-50 bg-white/90 hover:bg-white text-slate-700 text-xs font-medium rounded-md shadow px-3 py-1.5"
-      >
-        Log out
-      </button>
     </div>
   );
 }

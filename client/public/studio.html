@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#EEEEF8}
@@ -299,7 +300,7 @@ function refopts(sel){const isC=sel&&!REFS.includes(sel);return REFS.map(r=>`<op
 function tgRef(pfx){const s=document.getElementById(pfx+'-ref'),w=document.getElementById(pfx+'-refc');if(s&&w)w.style.display=s.value==='__custom'?'':'none';}
 function refVal(pfx){const s=document.getElementById(pfx+'-ref');if(!s)return REFS[0];return s.value==='__custom'?((document.getElementById(pfx+'-refn')||{}).value||'').trim()||REFS[0]:s.value;}
 function calcL(l){const ta=Math.round(l.amt*l.taxPct/100);const tot=l.amt+ta;const tdsAmt=Math.round(tot*l.tdsPct/100);const at=tot-tdsAmt;return{ta,tot,tdsAmt,at,ytc:l.pay==='Cleared'?0:at};}
-function setRole(r){S.role=r;if(r==='partner')S.user='Anirudh Venkatachalam';const _rbp=document.getElementById('rbp');if(_rbp)_rbp.className='rbtn'+(r==='partner'?' on':'');const _rbe=document.getElementById('rbe');if(_rbe)_rbe.className='rbtn'+(r==='employee'?' on':'');const _nv=NAV.find(n=>n.id===S.view);if(!_nv||_nv.off||!_nv.r.includes(r))S.view='dashboard';const uw=document.getElementById('usw');uw.innerHTML=r==='employee'?`<div class="usw"><div style="font-size:9px;color:#4B5563;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Session as</div><select style="width:100%;background:transparent;border:none;color:#D1D5DB;font-size:11px;outline:none;cursor:pointer" onchange="S.user=this.value;document.getElementById('sb-nm').textContent=this.value;render()">${uopts(S.user)}</select></div>`:'';if(r==='partner')S.user='Anirudh Venkatachalam';document.getElementById('sb-nm').textContent=S.user;rnav();render();}
+function setRole(r){S.role=r;if(r==='partner')S.user='Anirudh Venkatachalam';const _rbp=document.getElementById('rbp');if(_rbp)_rbp.className='rbtn'+(r==='partner'?' on':'');const _rbe=document.getElementById('rbe');if(_rbe)_rbe.className='rbtn'+(r==='employee'?' on':'');const _nv=NAV.find(n=>n.id===S.view);if(!_nv||_nv.off||!_nv.r.includes(r))S.view='dashboard';const uw=document.getElementById('usw');uw.innerHTML=r==='employee'?`<div class="usw"><div style="font-size:9px;color:#4B5563;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Session as</div><select style="width:100%;background:transparent;border:none;color:#D1D5DB;font-size:11px;outline:none;cursor:pointer" onchange="S.user=this.value;document.getElementById('sb-nm').textContent=this.value;render()">${uopts(S.user)}</select></div>`:'';if(r==='partner')S.user='Anirudh Venkatachalam';if(window.SBname){S.user=window.SBname;const _uw=document.getElementById('usw');if(_uw)_uw.innerHTML='';}document.getElementById('sb-nm').textContent=S.user;rnav();render();}
 function nav2(v){S.view=v;S.selProj=null;rnav();render();}
 function rnav(){document.getElementById('nav').innerHTML=NAV.filter(n=>!n.off&&n.r.includes(S.role)).map(n=>`<button class="nbtn${n.id===S.view?' on':''}" onclick="nav2('${n.id}')">${n.ic} ${n.lb}</button>`).join('');}
 function syncMaster(){S.cards.filter(c=>!c.del&&['WON','WIP','CLOSED'].includes(c.status)).forEach(card=>{if(!S.MASTER.find(m=>m.cardId===card.id)){const v=card.value,g=Math.round(v*.18);S.MASTER.push({id:S.nid.master++,cardId:card.id,brand:card.client,proj:card.project,cpoc:'',ipoc:card.poc,status:card.status==='CLOSED'?'Completed':card.status==='WON'?'Won':'In Progress',val:v,gst:g,tot:v+g,po:'No',inv:'Not Raised',pay:'Not Paid',date:card.date});}});}
@@ -357,13 +358,20 @@ function mED(id){const u=S.daily.find(x=>x.id===id);if(!u)return;sm(`<div class=
 function sbED(id){const u=S.daily.find(x=>x.id===id);const t=document.getElementById('edu-t')?.value.trim();if(!t||!u)return;u.eh.push({prev:u.text,at:new Date().toISOString()});u.text=t;hm();render();}
 function rChat(){const ch=S.chs.find(c=>c.id===S.selCh)||S.chs[0];const msgs=(ch?.msgs||[]).filter(m=>!S.mentOnly||m.tags.includes(S.user));return`<div class="cl"><div class="csb"><div class="csbt">Channels</div>${S.chs.map(c=>`<div class="chi${c.id===S.selCh?' on':''}" onclick="S.selCh=${c.id};S.mentOnly=false;S.showEP=false;render()"># ${c.name}<div style="font-size:10px;color:#374151">${c.members.length} members</div></div>`).join('')}<div class="chi" onclick="mACh()" style="color:#F97316;border:1px dashed #F97316;margin-top:8px">+ New Channel</div><div class="csbt" style="margin-top:16px">My Activity</div><div class="chi${S.mentOnly?' on':''}" onclick="S.mentOnly=!S.mentOnly;render()">@ My Mentions</div></div><div class="cm"><div class="cmh"><div><div style="font-weight:700;font-size:14px"># ${ch?.name||''}</div><div style="font-size:11px;color:#9CA3AF">${ch?.members.join(', ')||''}</div></div><button class="btn btng btnsm" onclick="mAMem(${ch?.id||0})">+ Add Member</button></div><div class="cml" id="chat-msgs">${S.mentOnly?`<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:12px;color:#1E40AF">Showing @${S.user} mentions</div>`:''}${msgs.map(m=>{const rx=Object.entries(m.rx||{});const txt=m.text.replace(/@(\w+)/g,'<span class="men">@$1</span>');return`<div class="mi"><div class="mav" style="background:${avcol(m.from)};width:30px;height:30px;font-size:10px">${ini(m.from)}</div><div style="flex:1;min-width:0"><div style="margin-bottom:2px"><span style="font-weight:700;font-size:12px">${m.from}</span><span style="font-size:10px;color:#9CA3AF;margin-left:6px">${m.date} ${m.time}</span></div><div class="mtx">${txt}</div><div class="mrs">${rx.map(([em,us])=>`<button class="rb${us.includes(S.user)?' on':''}" onclick="rxT(${ch.id},${m.id},'${em}')">${em} ${us.length}</button>`).join('')}<button class="rb" onclick="showRP(${ch.id},${m.id})" style="border:1px dashed #D1D5DB;color:#9CA3AF">+ React</button></div><div id="rp${m.id}" style="display:none;flex-wrap:wrap;gap:3px;padding:6px;background:#F9FAFB;border-radius:8px;margin-top:4px;max-width:250px">${EMOJIS.map(em=>`<button style="background:none;border:none;font-size:16px;cursor:pointer;padding:3px;border-radius:3px" onclick="rxT(${ch.id},${m.id},'${em}');document.getElementById('rp${m.id}').style.display='none'">${em}</button>`).join('')}</div></div></div>`;}).join('')||`<div style="text-align:center;color:#9CA3AF;padding:40px;font-size:13px">Start the conversation! 👋</div>`}</div><div class="cia">${S.showEP?`<div class="ep">${EMOJIS.map(em=>`<button class="eb" onclick="injEmoji(${ch?.id||0},'${em}')">${em}</button>`).join('')}</div>`:''}<div style="display:flex;gap:8px"><button class="btn btng btnsm" onclick="S.showEP=!S.showEP;render()" style="font-size:17px;padding:5px 10px">😊</button><textarea class="cin" id="ci${ch?.id||0}" placeholder="Message #${ch?.name||''}... use @Name to mention" rows="1" style="flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sndMsg(${ch?.id||0})}"></textarea><button class="btn btnp btnsm" onclick="sndMsg(${ch?.id||0})">Send</button></div></div></div></div>`;}
 function showRP(chId,msgId){const el=document.getElementById('rp'+msgId);if(el)el.style.display=el.style.display==='none'?'flex':'none';}
-function rxT(chId,msgId,em){const ch=S.chs.find(c=>c.id===chId);const m=ch?.msgs.find(x=>x.id===msgId);if(!m)return;if(!m.rx[em])m.rx[em]=[];const i=m.rx[em].indexOf(S.user);if(i>-1)m.rx[em].splice(i,1);else m.rx[em].push(S.user);if(!m.rx[em].length)delete m.rx[em];render();}
-function sndMsg(chId){const inp=document.getElementById('ci'+chId);const txt=inp?.value.trim();if(!txt)return;const ch=S.chs.find(c=>c.id===chId);if(!ch)return;const tags=[...txt.matchAll(/@(\w+)/g)].map(m=>m[1]);const now=new Date();ch.msgs.push({id:S.nid.msg++,from:S.user,text:txt,time:now.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}),date:'Jul 4',rx:{},tags});if(inp)inp.value='';S.showEP=false;render();}
+function rxT(chId,msgId,em){const ch=S.chs.find(c=>c.id===chId);const m=ch?.msgs.find(x=>x.id===msgId);if(!m)return;const had=(m.rx[em]||[]).includes(S.user);
+  if(chatLive){if(had)SB.from('chat_reactions').delete().eq('message_id',msgId).eq('emoji',em).eq('user_id',SBuid).then(()=>{});else SB.from('chat_reactions').insert({message_id:msgId,user_id:SBuid,author:S.user,emoji:em}).then(()=>{});}
+  if(!m.rx[em])m.rx[em]=[];const i=m.rx[em].indexOf(S.user);if(i>-1)m.rx[em].splice(i,1);else m.rx[em].push(S.user);if(!m.rx[em].length)delete m.rx[em];render();}
+function sndMsg(chId){const inp=document.getElementById('ci'+chId);const txt=inp?.value.trim();if(!txt)return;const ch=S.chs.find(c=>c.id===chId);if(!ch)return;const tags=[...txt.matchAll(/@(\w+)/g)].map(m=>m[1]);const now=new Date();
+  if(inp)inp.value='';S.showEP=false;
+  if(chatLive){SB.from('chat_messages').insert({channel_id:chId,user_id:SBuid,author:S.user,text:txt,tags:tags}).select().single().then(({data,error})=>{if(error){alert('Message failed to send: '+error.message);return;}if(!ch.msgs.find(m=>m.id===data.id)){ch.msgs.push(mapMsg(data,[]));if(S.view==='chat')render();}});return;}
+  ch.msgs.push({id:S.nid.msg++,from:S.user,text:txt,time:now.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}),date:now.toLocaleDateString('en',{month:'short',day:'numeric'}),rx:{},tags});render();}
 function injEmoji(chId,em){const inp=document.getElementById('ci'+chId);if(inp){inp.value+=em;inp.focus();}S.showEP=false;render();}
 function mACh(){sm(`<div class="mot">💬 New Channel</div><div class="fg"><label class="fl">Channel Name *</label><input class="fi" id="ch-nm" placeholder="e.g. project-name or weekly-sync"></div><div class="fg"><label class="fl">Members</label>${USERS.map((u,i)=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px"><input type="checkbox" id="chm-${i}" ${u===S.user?'checked disabled':''}> ${u}</label>`).join('')}</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btng" onclick="hm()">Cancel</button><button class="btn btnp" onclick="sbACh()">Create Channel</button></div>`);}
-function sbACh(){const nm=document.getElementById('ch-nm')?.value.trim().toLowerCase().replace(/\s+/g,'-');if(!nm){alert('Channel name required');return;}const mem=USERS.filter((u,i)=>document.getElementById('chm-'+i)?.checked||u===S.user);S.chs.push({id:S.nid.ch++,name:nm,members:mem,msgs:[]});S.selCh=S.chs[S.chs.length-1].id;hm();render();}
+function sbACh(){const nm=document.getElementById('ch-nm')?.value.trim().toLowerCase().replace(/\s+/g,'-');if(!nm){alert('Channel name required');return;}const mem=USERS.filter((u,i)=>document.getElementById('chm-'+i)?.checked||u===S.user);
+  if(chatLive){hm();SB.from('chat_channels').insert({name:nm,members:mem,created_by:SBuid}).select().single().then(({data,error})=>{if(error){alert('Channel not created: '+(error.code==='23505'?'a channel with that name already exists.':error.message));return;}if(!S.chs.find(c=>c.id===data.id))S.chs.push({id:data.id,name:data.name,members:data.members||[],msgs:[]});S.selCh=data.id;render();});return;}
+  S.chs.push({id:S.nid.ch++,name:nm,members:mem,msgs:[]});S.selCh=S.chs[S.chs.length-1].id;hm();render();}
 function mAMem(chId){const ch=S.chs.find(c=>c.id===chId);if(!ch)return;const av=USERS.filter(u=>!ch.members.includes(u));sm(`<div class="mot">➕ Add to #${ch.name}</div>${av.length?av.map((u,i)=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px"><input type="checkbox" id="nm-${i}"> ${u}</label>`).join(''):'<div style="color:#9CA3AF;font-size:13px">All users already members.</div>'}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btng" onclick="hm()">Cancel</button><button class="btn btnp" onclick="sbAMem(${chId})">Add</button></div>`);}
-function sbAMem(chId){const ch=S.chs.find(c=>c.id===chId);const av=USERS.filter(u=>!ch.members.includes(u));av.forEach((u,i)=>{if(document.getElementById('nm-'+i)?.checked)ch.members.push(u);});hm();render();}
+function sbAMem(chId){const ch=S.chs.find(c=>c.id===chId);const av=USERS.filter(u=>!ch.members.includes(u));av.forEach((u,i)=>{if(document.getElementById('nm-'+i)?.checked)ch.members.push(u);});if(chatLive)SB.from('chat_channels').update({members:ch.members}).eq('id',chId).then(()=>{});hm();render();}
 function filtMaster(){if(S.trkFilt==='monthly')return S.MASTER.filter(m=>m.date&&m.date.startsWith(S.trkMon));if(S.trkFilt==='fy')return S.MASTER.filter(m=>m.date&&m.date>='2026-04-01'&&m.date<='2027-03-31');return S.MASTER;}
 function filtLedger(){if(S.ledFilt==='monthly')return S.LEDGER.filter(l=>l.date&&l.date.startsWith(S.ledMon));if(S.ledFilt==='fy')return S.LEDGER.filter(l=>l.date&&l.date>='2026-04-01'&&l.date<='2027-03-31');return S.LEDGER;}
 function rFin(){return`<div class="tabs"><button class="tab${S.finTab==='tracker'?' on':''}" onclick="S.finTab='tracker';render()">📊 Project Tracker</button><button class="tab${S.finTab==='ledger'?' on':''}" onclick="S.finTab='ledger';render()">📒 Payment Ledger</button></div>${S.finTab==='tracker'?rTracker():rLedger()}`;}
@@ -389,10 +397,55 @@ function sbLv(isEmp){const fr=document.getElementById('lv-fr')?.value,to=documen
 function sm(html){document.getElementById('mc').innerHTML=html;document.getElementById('mov').className='mov on';}
 function hm(){document.getElementById('mov').className='mov';}
 function conf(){const el=document.getElementById('cf');el.style.display='block';el.innerHTML='';const colors=['#F97316','#FFD600','#4ADE80','#818CF8','#FB7185','#38BDF8'];for(let i=0;i<55;i++){const d=document.createElement('div');d.className='cp';d.style.cssText=`left:${Math.random()*100}%;top:-20px;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[i%colors.length]};animation-delay:${Math.random()*0.5}s;animation-duration:${1.8+Math.random()*0.8}s`;el.appendChild(d);}setTimeout(()=>{el.style.display='none';el.innerHTML='';},3200);}
+/* ===================== LIVE CHAT (Supabase) =====================
+   Real identity + persistent realtime chat. If Supabase is unreachable,
+   the user isn't signed in (e.g. local preview), or the chat tables don't
+   exist yet (run server/chat_schema.sql once in Supabase -> SQL Editor),
+   chat silently falls back to the in-memory demo data. */
+const SB_URL='https://atlvwgqpimltjzrhgkhy.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bHZ3Z3FwaW1sdGp6cmhna2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0OTQ4NjUsImV4cCI6MjA5OTA3MDg2NX0.3asmPQAm1zTWEwRV49_-N2hBXUh-nsIkZI7LWMyDKDM';
+let SB=null,SBuser=null,SBuid=null,chatLive=false;
+window.SBname='';
+try{if(window.supabase&&window.supabase.createClient)SB=window.supabase.createClient(SB_URL,SB_KEY);}catch(e){}
+function resolveName(raw){if(!raw)return'';const r=String(raw).trim().toLowerCase();const first=r.split(/[\s@.]+/)[0];const hit=USERS.find(u=>{const ul=u.toLowerCase();return ul===r||ul.split(' ')[0]===first;});return hit||String(raw).trim().replace(/(^|\s)\w/g,c=>c.toUpperCase());}
+function mapMsg(r,rxRows){const d=new Date(r.created_at);const rx={};(rxRows||[]).filter(x=>x.message_id===r.id).forEach(x=>{(rx[x.emoji]=rx[x.emoji]||[]).push(x.author);});return{id:r.id,from:r.author,text:r.text,time:d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}),date:d.toLocaleDateString('en',{month:'short',day:'numeric'}),rx:rx,tags:r.tags||[]};}
+function findLiveMsg(mid){for(const c of S.chs){const m=c.msgs.find(x=>x.id===mid);if(m)return m;}return null;}
+async function chatInit(){
+  if(!SB)return;
+  try{
+    const {data:{session}}=await SB.auth.getSession();
+    if(!(session&&session.user))return; // not signed in -> demo chat
+    SBuser=session.user;SBuid=SBuser.id;
+    const meta=SBuser.user_metadata||{};
+    window.SBname=resolveName(meta.full_name||meta.name||(SBuser.email||'').split('@')[0]);
+    S.user=window.SBname;
+    const nmEl=document.getElementById('sb-nm');if(nmEl)nmEl.textContent=S.user;
+    const uw=document.getElementById('usw');if(uw)uw.innerHTML='';
+    const [{data:chans,error:e1},{data:msgs,error:e2},{data:rxs,error:e3}]=await Promise.all([
+      SB.from('chat_channels').select('*').order('id'),
+      SB.from('chat_messages').select('*').order('id'),
+      SB.from('chat_reactions').select('*')]);
+    if(e1||e2||e3)throw(e1||e2||e3);
+    S.chs=(chans||[]).map(c=>({id:c.id,name:c.name,members:c.members||[],msgs:(msgs||[]).filter(m=>m.channel_id===c.id).map(m=>mapMsg(m,rxs))}));
+    if(S.chs.length)S.selCh=S.chs[0].id;
+    chatLive=true;
+    SB.channel('chat-stream')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},p=>{const r=p.new;const ch=S.chs.find(c=>c.id===r.channel_id);if(ch&&!ch.msgs.find(m=>m.id===r.id)){ch.msgs.push(mapMsg(r,[]));if(S.view==='chat')render();}})
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_reactions'},p=>{const r=p.new;const m=findLiveMsg(r.message_id);if(m){if(!m.rx[r.emoji])m.rx[r.emoji]=[];if(!m.rx[r.emoji].includes(r.author)){m.rx[r.emoji].push(r.author);if(S.view==='chat')render();}}})
+      .on('postgres_changes',{event:'DELETE',schema:'public',table:'chat_reactions'},p=>{const r=p.old||{};const m=findLiveMsg(r.message_id);if(m&&m.rx[r.emoji]){const i=m.rx[r.emoji].indexOf(r.author);if(i>-1){m.rx[r.emoji].splice(i,1);if(!m.rx[r.emoji].length)delete m.rx[r.emoji];if(S.view==='chat')render();}}})
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_channels'},p=>{const c=p.new;if(!S.chs.find(x=>x.id===c.id)){S.chs.push({id:c.id,name:c.name,members:c.members||[],msgs:[]});if(S.view==='chat')render();}})
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_channels'},p=>{const c=p.new;const ch=S.chs.find(x=>x.id===c.id);if(ch){ch.name=c.name;ch.members=c.members||[];if(S.view==='chat')render();}})
+      .subscribe();
+    if(S.view==='chat')render();
+    console.log('Chat: LIVE mode — signed in as '+S.user);
+  }catch(e){console.warn('Chat: live mode unavailable ('+(e&&e.message||e)+') — using demo data. Run server/chat_schema.sql in Supabase if you have not yet.');}
+}
+
 syncMaster();
 // Role is chosen on the sign-in page and passed in as ?role=partner|employee.
 const _r=new URLSearchParams(location.search).get('role');
 setRole(_r==='employee'?'employee':'partner');
+chatInit();
 </script>
 </body>
 </html>

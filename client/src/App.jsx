@@ -18,6 +18,9 @@ export default function App() {
   // screen. Lives here (not in SignupForm) so it survives the brief
   // auto-login/logout that signup triggers when email confirmation is off.
   const [justSignedUp, setJustSignedUp] = useState(false);
+  // Set when a signup is waiting on the emailed 6-digit code (email
+  // confirmation ON). Shows the OTP entry screen for that address.
+  const [pendingEmail, setPendingEmail] = useState(null);
   // Which role to open the Studio OS in — chosen on the sign-in page.
   const [role, setRole] = useState('partner'); // 'partner' | 'employee'
 
@@ -38,7 +41,7 @@ export default function App() {
   // logged-in view.
 
   // Once logged in (and not mid-signup), show the full-screen Studio OS app.
-  if (session && !justSignedUp) {
+  if (session && !justSignedUp && !pendingEmail) {
     return <LoggedIn session={session} role={role} />;
   }
 
@@ -56,11 +59,18 @@ export default function App() {
             project URL and anon key, then reload. Auth won’t work until then.
           </div>
         )}
-        {justSignedUp ? (
+        {pendingEmail ? (
+          <OtpForm
+            email={pendingEmail}
+            onVerified={() => setPendingEmail(null)}
+            onBack={() => setPendingEmail(null)}
+          />
+        ) : justSignedUp ? (
           <SignupSuccess onGoToLogin={() => setJustSignedUp(false)} />
         ) : (
           <AuthPanel
             onSignedUp={() => setJustSignedUp(true)}
+            onPendingOtp={setPendingEmail}
             role={role}
             onRole={setRole}
           />
@@ -71,7 +81,7 @@ export default function App() {
 }
 
 /** Login / Sign Up tabbed panel, shown when logged out. */
-function AuthPanel({ onSignedUp, role, onRole }) {
+function AuthPanel({ onSignedUp, onPendingOtp, role, onRole }) {
   const [tab, setTab] = useState('login'); // 'login' | 'signup'
 
   return (
@@ -92,7 +102,7 @@ function AuthPanel({ onSignedUp, role, onRole }) {
       {tab === 'login' ? (
         <LoginForm />
       ) : (
-        <SignupForm onSignedUp={onSignedUp} />
+        <SignupForm onSignedUp={onSignedUp} onPendingOtp={onPendingOtp} />
       )}
     </div>
   );
@@ -178,7 +188,7 @@ function LoginForm() {
 }
 
 /** Email + password + confirm signup via supabase.auth.signUp(). */
-function SignupForm({ onSignedUp }) {
+function SignupForm({ onSignedUp, onPendingOtp }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -203,7 +213,7 @@ function SignupForm({ onSignedUp }) {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email: cleanEmail, password });
+    const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password });
 
     if (error) {
       setLoading(false);
@@ -211,8 +221,16 @@ function SignupForm({ onSignedUp }) {
       return;
     }
 
-    // If "Confirm email" is OFF, Supabase auto-creates a session on signup.
-    // We want the user to sign in explicitly, so clear that fresh session...
+    // With "Confirm email" ON there is no session yet — the account is dormant
+    // until the emailed 6-digit code (or link) is used. Show the OTP screen.
+    if (!data?.session) {
+      setLoading(false);
+      onPendingOtp(cleanEmail);
+      return;
+    }
+
+    // "Confirm email" OFF: Supabase auto-created a session. We want the user
+    // to sign in explicitly, so clear that fresh session...
     await supabase.auth.signOut();
     setLoading(false);
 
@@ -228,6 +246,77 @@ function SignupForm({ onSignedUp }) {
       <Field label="Confirm Password" type="password" value={confirm} onChange={setConfirm} />
       {error && <ErrorText>{error}</ErrorText>}
       <SubmitButton loading={loading}>Sign Up</SubmitButton>
+    </form>
+  );
+}
+
+/**
+ * OTP entry screen shown right after signup (email confirmation ON): the
+ * person types the 6-digit code from their @sugarshotfilms.com inbox. On
+ * success Supabase confirms the account AND starts a session, so they land
+ * straight in the Studio. The link in the same email keeps working too.
+ */
+function OtpForm({ email, onVerified, onBack }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function verify(e) {
+    e.preventDefault();
+    setError('');
+    setInfo('');
+    const token = code.trim();
+    if (!/^\d{6}$/.test(token)) {
+      setError('Enter the 6-digit code from the email.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    onVerified(); // session is live now — App switches to the Studio
+  }
+
+  async function resend() {
+    setError('');
+    setInfo('');
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) setError(error.message);
+    else setInfo('New code sent — give it a minute and check the inbox.');
+  }
+
+  return (
+    <form onSubmit={verify} className="bg-white rounded-xl shadow p-6 space-y-4">
+      <h2 className="text-lg font-semibold text-slate-800">Verify your email</h2>
+      <p className="text-sm text-slate-600">
+        We sent a 6-digit code to <strong>{email}</strong>. Enter it below (or
+        click the link in the same email).
+      </p>
+      <input
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        placeholder="••••••"
+        className="w-full text-center text-2xl tracking-[0.5em] font-semibold border border-slate-300 rounded-md py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+      {error && <ErrorText>{error}</ErrorText>}
+      {info && (
+        <p className="text-sm text-green-700 bg-green-50 rounded-md px-3 py-2">{info}</p>
+      )}
+      <SubmitButton loading={loading}>Verify &amp; Sign In</SubmitButton>
+      <div className="flex justify-between text-sm">
+        <button type="button" onClick={resend} className="text-indigo-600 hover:underline">
+          Resend code
+        </button>
+        <button type="button" onClick={onBack} className="text-slate-500 hover:underline">
+          Back
+        </button>
+      </div>
     </form>
   );
 }

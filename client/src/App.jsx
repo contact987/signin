@@ -189,14 +189,21 @@ function SignupForm({ onSignedUp }) {
     e.preventDefault();
     setError('');
 
-    // Client-side check before hitting the network.
+    // Client-side checks before hitting the network. (The same office-domain
+    // rule is ALSO enforced in the database — see server/auth_domain_lock.sql —
+    // so bypassing this form doesn't get anyone in.)
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@sugarshotfilms\.com$/.test(cleanEmail)) {
+      setError('Please use your @sugarshotfilms.com office email — other addresses cannot register.');
+      return;
+    }
     if (password !== confirm) {
       setError('Passwords do not match.');
       return;
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({ email: cleanEmail, password });
 
     if (error) {
       setLoading(false);
@@ -230,7 +237,8 @@ function SignupSuccess({ onGoToLogin }) {
   return (
     <div className="bg-white rounded-xl shadow p-6 text-center space-y-4">
       <p className="text-green-700 bg-green-50 rounded-md px-3 py-2 font-medium">
-        Sign up successful!
+        Sign up successful! Check your @sugarshotfilms.com inbox for a
+        confirmation link, then sign in.
       </p>
       <button
         onClick={onGoToLogin}

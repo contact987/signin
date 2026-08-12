@@ -6,6 +6,11 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 // `/api/...`. Override with VITE_API_URL for a separately-hosted backend.
 const API_URL = import.meta.env.VITE_API_URL || '';
 
+// Version tag for the embedded Studio (client/public/studio.html). Bump this
+// whenever studio.html changes — it cache-busts the iframe so every browser
+// picks up the new build on a normal reload (no hard refresh needed).
+const STUDIO_V = '2026-08-12-1';
+
 export default function App() {
   // The current Supabase session (null when logged out).
   const [session, setSession] = useState(null);
@@ -256,8 +261,10 @@ function LoggedIn({ session, role }) {
     <div className="fixed inset-0">
       {/* The Studio OS prototype fills the whole screen, opened in the role
           chosen on the sign-in page. Logout lives in its sidebar. */}
+      {/* `v` is a cache-buster: bump STUDIO_V whenever studio.html changes so
+          every browser fetches the new build without needing a hard refresh. */}
       <iframe
-        src={`/studio.html?role=${role}`}
+        src={`/studio.html?role=${role}&v=${STUDIO_V}`}
         title="Sugar Shot Studio OS"
         className="w-full h-full border-0"
       />

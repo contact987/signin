@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 // Version tag for the embedded Studio (client/public/studio.html). Bump this
 // whenever studio.html changes — it cache-busts the iframe so every browser
 // picks up the new build on a normal reload (no hard refresh needed).
-const STUDIO_V = '2026-08-12-4';
+const STUDIO_V = '2026-08-12-5';
 
 export default function App() {
   // The current Supabase session (null when logged out).

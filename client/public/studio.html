@@ -423,14 +423,45 @@ function mARmb(){_rmbFile=null;sm(`<div class="mot">🧾 New Reimbursement</div>
   <div class="fr"><div class="fg"><label class="fl">Category *</label><select class="fi" id="rm-cat">${Object.keys(RCATS).map(c=>`<option>${c}</option>`).join('')}</select></div><div class="fg"><label class="fl">Amount (₹) *</label><input class="fi" id="rm-amt" type="number" min="1" placeholder="single bill or combined total"></div></div>
   <div class="fg"><label class="fl">What was it for? *</label><input class="fi" id="rm-desc" placeholder="e.g. Cabs to shoot location / Crew lunch / Props"></div>
   <div class="fr"><div class="fg"><label class="fl">Date</label><input class="fi" id="rm-dt" type="date" value="${todayStr()}"></div><div class="fg"><label class="fl">Project (optional)</label><select class="fi" id="rm-prj"><option value="">—</option>${S.projects.filter(p=>!p.int).map(p=>`<option>${p.name}</option>`).join('')}</select></div></div>
-  <div class="fg"><label class="fl">Attach bill (photo / PDF) — optional</label><input class="fi" id="rm-bill" type="file" accept="image/*,.pdf" onchange="_rmbFile=this.files[0]?{name:this.files[0].name,url:URL.createObjectURL(this.files[0])}:null" style="padding:7px 10px"></div>
+  <div class="fg"><label class="fl">Attach bill (photo / PDF) — optional</label><input class="fi" id="rm-bill" type="file" accept="image/*,.pdf" onchange="_rmbFile=this.files[0]?{name:this.files[0].name,url:URL.createObjectURL(this.files[0]),file:this.files[0]}:null" style="padding:7px 10px"></div>
   <div style="font-size:11px;color:#9CA3AF;margin:-4px 0 10px">No bill handy? Leave it empty and just enter the <strong>total amount</strong> — you can note "combined total" in the description.</div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn btng" onclick="hm()">Cancel</button><button class="btn btnp" onclick="sbARmb()">Submit Claim</button></div>`);}
 function sbARmb(){const desc=document.getElementById('rm-desc')?.value.trim();const amt=parseInt(document.getElementById('rm-amt')?.value)||0;if(!desc){alert('Describe what the expense was for.');return;}if(amt<=0){alert('Enter the amount.');return;}
-  S.reimbs.push({id:S.nid.rmb++,who:S.user,cat:document.getElementById('rm-cat').value,desc:desc,amount:amt,date:document.getElementById('rm-dt').value||todayStr(),proj:document.getElementById('rm-prj').value||'',bill:_rmbFile?_rmbFile.name:null,billUrl:_rmbFile?_rmbFile.url:null,status:'Pending',by:null});
-  _rmbFile=null;S.reimbTab='mine';hm();render();}
-function decRmb(id,st){const r=S.reimbs.find(x=>x.id===id);if(!r)return;if(st==='Rejected'&&!confirm('Reject this claim?'))return;r.status=st;r.by=S.user;render();}
-function dRmb(id){if(!confirm('Withdraw this claim?'))return;S.reimbs=S.reimbs.filter(x=>x.id!==id);render();}
+  const cat=document.getElementById('rm-cat').value,dt=document.getElementById('rm-dt').value||todayStr(),prj=document.getElementById('rm-prj').value||'';const f=_rmbFile;_rmbFile=null;S.reimbTab='mine';hm();
+  if(rmbLive){(async()=>{try{
+    let billName=null,billPath=null;
+    if(f&&f.file){billName=f.name;billPath=SBuid+'/'+Date.now()+'_'+f.name.replace(/[^\w.\-]/g,'_');const {error:ue}=await SB.storage.from('bills').upload(billPath,f.file);if(ue)throw ue;}
+    const {data,error}=await SB.from('reimbursements').insert({user_id:SBuid,who:S.user,cat:cat,descr:desc,amount:amt,date:dt,proj:prj,bill:billName,bill_path:billPath,status:'Pending'}).select().single();
+    if(error)throw error;
+    if(!S.reimbs.find(r=>r.id===data.id)){const rr=mapRmb(data);if(rr.billPath){const {data:u}=await SB.storage.from('bills').createSignedUrl(rr.billPath,3600);if(u)rr.billUrl=u.signedUrl;}S.reimbs.push(rr);}
+    if(S.view==='reimb')render();
+  }catch(e){alert('Claim not submitted: '+(e&&e.message||e));}})();return;}
+  S.reimbs.push({id:S.nid.rmb++,who:S.user,cat:cat,desc:desc,amount:amt,date:dt,proj:prj,bill:f?f.name:null,billUrl:f?f.url:null,status:'Pending',by:null});
+  render();}
+function decRmb(id,st){const r=S.reimbs.find(x=>x.id===id);if(!r)return;if(st==='Rejected'&&!confirm('Reject this claim?'))return;r.status=st;r.by=S.user;if(rmbLive)SB.from('reimbursements').update({status:st,decided_by:S.user}).eq('id',id).then(({error})=>{if(error)alert('Could not save the decision: '+error.message);});render();}
+function dRmb(id){if(!confirm('Withdraw this claim?'))return;S.reimbs=S.reimbs.filter(x=>x.id!==id);if(rmbLive)SB.from('reimbursements').delete().eq('id',id).then(()=>{});render();}
+/* --- live mode (Supabase): persistent claims + bill files in the private
+   'bills' storage bucket. Falls back to demo data if server/reimb_schema.sql
+   hasn't been run yet or the user isn't signed in. --- */
+function mapRmb(r){return{id:r.id,who:r.who,cat:r.cat,desc:r.descr,amount:Number(r.amount),date:r.date,proj:r.proj||'',bill:r.bill||null,billPath:r.bill_path||null,billUrl:null,status:r.status,by:r.decided_by||null};}
+async function rmbInit(){
+  if(!SB||!SBuid)return;
+  try{
+    const {data,error}=await SB.from('reimbursements').select('*').order('id');
+    if(error)throw error;
+    S.reimbs=(data||[]).map(mapRmb);
+    rmbLive=true;
+    const paths=S.reimbs.filter(r=>r.billPath).map(r=>r.billPath);
+    if(paths.length){const {data:su}=await SB.storage.from('bills').createSignedUrls(paths,3600);(su||[]).forEach(u=>{if(u.signedUrl){const rr=S.reimbs.find(r=>r.billPath===u.path);if(rr)rr.billUrl=u.signedUrl;}});}
+    SB.channel('reimb-stream')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'reimbursements'},async p=>{if(!S.reimbs.find(r=>r.id===p.new.id)){const rr=mapRmb(p.new);if(rr.billPath){const {data:u}=await SB.storage.from('bills').createSignedUrl(rr.billPath,3600);if(u)rr.billUrl=u.signedUrl;}S.reimbs.push(rr);if(S.view==='reimb')render();}})
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'reimbursements'},p=>{const rr=S.reimbs.find(r=>r.id===p.new.id);if(rr){rr.status=p.new.status;rr.by=p.new.decided_by||rr.by;if(S.view==='reimb')render();}})
+      .on('postgres_changes',{event:'DELETE',schema:'public',table:'reimbursements'},p=>{const i=S.reimbs.findIndex(r=>r.id===(p.old||{}).id);if(i>-1){S.reimbs.splice(i,1);if(S.view==='reimb')render();}})
+      .subscribe();
+    if(S.view==='reimb')render();
+    console.log('Reimbursements: LIVE mode');
+  }catch(e){console.warn('Reimbursements: live mode unavailable ('+(e&&e.message||e)+') — using demo data. Run server/reimb_schema.sql in Supabase if you have not yet.');}
+}
 
 function rLv(){const myLv=S.leaves.filter(l=>l.who===S.user);const othersApproved=S.leaves.filter(l=>l.who!==S.user&&l.status==='Approved');const toShow=S.role==='partner'?S.leaves:[...myLv,...othersApproved];const pending=S.leaves.filter(l=>l.status==='Pending');const lc=st=>st==='Approved'?'#4ADE80':st==='Rejected'?'#FB7185':'#FCD34D';const lbg=st=>st==='Approved'?'#D1FAE5':st==='Rejected'?'#FEE2E2':'#FEF3C7';const ltx=st=>st==='Approved'?'#15803D':st==='Rejected'?'#BE123C':'#92400E';return`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div><div style="font-size:14px;font-weight:700;color:#111827">🌴 Leave Management</div><div style="font-size:12px;color:#9CA3AF;margin-top:2px">${S.role==='partner'?'Partner view — all team leaves visible':'Your leaves + approved team leaves'}</div></div><button class="btn btnp" onclick="mReqLv()">+ Request Leave</button></div>${S.role==='partner'&&pending.length?`<div style="background:#FEF3C7;border:1.5px solid #FCD34D;border-radius:10px;padding:12px 14px;margin-bottom:14px"><span style="font-size:13px;font-weight:600;color:#92400E">⏳ ${pending.length} leave request${pending.length>1?'s':''} pending your approval</span></div>`:''}${toShow.length===0?`<div class="es">No leaves to display</div>`:''}${toShow.map(l=>{const days=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;return`<div class="lv-card" style="border-left-color:${lc(l.status)}"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div class="mav" style="background:${avcol(l.who)};width:30px;height:30px;font-size:10px">${ini(l.who)}</div><span style="font-weight:700;font-size:14px">${l.who}</span></div><div style="font-size:12px;color:#374151;margin-left:38px"><strong>${l.type}</strong> · ${l.from}${l.from!==l.to?' → '+l.to:''} · <strong>${days} day${days>1?'s':''}</strong></div></div><span class="badge" style="background:${lbg(l.status)};color:${ltx(l.status)}">${l.status}</span></div><div style="font-size:13px;color:#6B7280;margin-left:38px">${l.reason}</div>${l.notes?`<div style="font-size:11px;color:#9CA3AF;margin-left:38px;margin-top:2px">Note: ${l.notes}</div>`:''}${l.approvedBy?`<div style="font-size:10px;color:#9CA3AF;margin-left:38px;margin-top:3px">✓ ${l.status} by ${l.approvedBy}</div>`:''}${l.status==='Pending'&&S.role==='partner'?`<div style="display:flex;gap:8px;margin-top:10px;margin-left:38px"><button class="btn btnok btnsm" onclick="appLv(${l.id})">✅ Approve</button><button class="btn btnd btnsm" onclick="rejLv(${l.id})">✕ Reject</button></div>`:''}  </div>`;}).join('')}`;}
 function appLv(id){const l=S.leaves.find(x=>x.id===id);if(l){l.status='Approved';l.approvedBy=S.user;}render();}
@@ -447,7 +478,7 @@ function conf(){const el=document.getElementById('cf');el.style.display='block';
    chat silently falls back to the in-memory demo data. */
 const SB_URL='https://atlvwgqpimltjzrhgkhy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bHZ3Z3FwaW1sdGp6cmhna2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0OTQ4NjUsImV4cCI6MjA5OTA3MDg2NX0.3asmPQAm1zTWEwRV49_-N2hBXUh-nsIkZI7LWMyDKDM';
-let SB=null,SBuser=null,SBuid=null,chatLive=false;
+let SB=null,SBuser=null,SBuid=null,chatLive=false,rmbLive=false;
 window.SBname='';
 try{if(window.supabase&&window.supabase.createClient)SB=window.supabase.createClient(SB_URL,SB_KEY);}catch(e){}
 function resolveName(raw){if(!raw)return'';const r=String(raw).trim().toLowerCase();const first=r.split(/[\s@.]+/)[0];const hit=USERS.find(u=>{const ul=u.toLowerCase();return ul===r||ul.split(' ')[0]===first;});return hit||String(raw).trim().replace(/(^|\s)\w/g,c=>c.toUpperCase());}
@@ -464,6 +495,7 @@ async function chatInit(){
     S.user=window.SBname;
     const nmEl=document.getElementById('sb-nm');if(nmEl)nmEl.textContent=S.user;
     const uw=document.getElementById('usw');if(uw)uw.innerHTML='';
+    rmbInit(); // reimbursements go live independently of chat
     const [{data:chans,error:e1},{data:msgs,error:e2},{data:rxs,error:e3}]=await Promise.all([
       SB.from('chat_channels').select('*').order('id'),
       SB.from('chat_messages').select('*').order('id'),

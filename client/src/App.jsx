@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 // Version tag for the embedded Studio (client/public/studio.html). Bump this
 // whenever studio.html changes — it cache-busts the iframe so every browser
 // picks up the new build on a normal reload (no hard refresh needed).
-const STUDIO_V = '2026-08-12-9';
+const STUDIO_V = '2026-08-12-10';
 
 export default function App() {
   // The current Supabase session (null when logged out).
@@ -54,10 +54,10 @@ export default function App() {
 
   // Otherwise show the centered auth card (login / signup / signup-success).
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FAFAF9] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <h1 className="text-2xl font-bold text-slate-800 text-center mb-6">
-          Finance Tracker
+          Sugar Shot <span className="text-[#FF4C4C]">Studio OS</span>
         </h1>
         {!isSupabaseConfigured && (
           <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
@@ -187,7 +187,7 @@ function RoleToggle({ role, onRole }) {
             onClick={() => onRole(value)}
             className={`flex-1 rounded-md py-2 text-sm font-medium border transition-colors ${
               role === value
-                ? 'bg-indigo-600 border-indigo-600 text-white'
+                ? 'bg-[#FF4C4C] border-[#FF4C4C] text-white'
                 : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
             }`}
           >
@@ -205,7 +205,7 @@ function TabButton({ active, onClick, children }) {
       onClick={onClick}
       className={`flex-1 pb-2 text-sm font-medium transition-colors ${
         active
-          ? 'text-indigo-600 border-b-2 border-indigo-600'
+          ? 'text-[#FF4C4C] border-b-2 border-[#FF4C4C]'
           : 'text-slate-500 hover:text-slate-700'
       }`}
     >
@@ -361,7 +361,7 @@ function OtpForm({ email, onVerified, onBack }) {
         inputMode="numeric"
         autoComplete="one-time-code"
         placeholder="••••••"
-        className="w-full text-center text-2xl tracking-[0.5em] font-semibold border border-slate-300 rounded-md py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full text-center text-2xl tracking-[0.5em] font-semibold border border-slate-300 rounded-md py-2 focus:outline-none focus:ring-2 focus:ring-[#FF4C4C]"
       />
       {error && <ErrorText>{error}</ErrorText>}
       {info && (
@@ -369,7 +369,7 @@ function OtpForm({ email, onVerified, onBack }) {
       )}
       <SubmitButton loading={loading}>Verify &amp; Sign In</SubmitButton>
       <div className="flex justify-between text-sm">
-        <button type="button" onClick={resend} className="text-indigo-600 hover:underline">
+        <button type="button" onClick={resend} className="text-[#FF4C4C] hover:underline">
           Resend code
         </button>
         <button type="button" onClick={onBack} className="text-slate-500 hover:underline">
@@ -390,7 +390,7 @@ function SignupSuccess({ onGoToLogin }) {
       </p>
       <button
         onClick={onGoToLogin}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md py-2"
+        className="w-full bg-[#FF4C4C] hover:bg-[#E53E3E] text-white font-medium rounded-md py-2"
       >
         Proceed to sign in
       </button>
@@ -439,7 +439,7 @@ function Field({ label, type, value, onChange }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-[#FF4C4C] focus:ring-1 focus:ring-[#FF4C4C] outline-none"
       />
     </label>
   );
@@ -456,7 +456,7 @@ function SubmitButton({ loading, children }) {
     <button
       type="submit"
       disabled={loading}
-      className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-medium rounded-md py-2"
+      className="w-full bg-[#FF4C4C] hover:bg-[#E53E3E] disabled:opacity-60 text-white font-medium rounded-md py-2"
     >
       {loading ? 'Please wait…' : children}
     </button>

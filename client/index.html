@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sugar Shot — Studio OS</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0D0D0D" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Studio OS" />
     <style>
       /* Sugar Shot brand font (same files the website uses) */
       @font-face{font-family:'Axiforma';font-weight:400;font-style:normal;font-display:swap;src:url('https://cdn.prod.website-files.com/66cd872362e3c04cb0178c66/67e695c4e8c1d02badb95494_Axiforma-Regular.woff2') format('woff2')}
@@ -16,5 +23,8 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    </script>
   </body>
 </html>

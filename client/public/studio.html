@@ -224,9 +224,34 @@ tr:hover td{background:#FAFAF8}
 select.fi{appearance:none;-webkit-appearance:none;background-color:#fff;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' stroke='%23999997' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding:10px 32px 10px 14px;border-radius:10px;font-weight:500;color:#4A4A48;cursor:pointer;box-shadow:0 1px 2px rgba(13,13,13,.04);transition:border-color .15s}
 select.fi:hover{border-color:#CBCBC8}
 select.fi:focus{border-color:#FF4C4C;box-shadow:0 0 0 3px rgba(255,76,76,.08)}
+/* ============ MOBILE (≤768px) ============ */
+.sbtg{display:none}
+.sbov{display:none}
+@media(max-width:768px){
+  .sbtg{display:flex;position:fixed;top:12px;left:14px;z-index:140;width:42px;height:42px;border-radius:13px;background:#0D0D0D;color:#fff;border:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 12px rgba(13,13,13,.3)}
+  .sb{position:fixed;left:0;top:0;bottom:0;z-index:150;height:100dvh;width:256px;transform:translateX(-105%);transition:transform .25s ease;box-shadow:none}
+  body.sbo .sb{transform:none;box-shadow:8px 0 30px rgba(0,0,0,.35)}
+  body.sbo .sbov{display:block;position:fixed;inset:0;background:rgba(13,13,13,.45);z-index:145}
+  .main{padding:16px 14px 40px}
+  .ph{padding-left:56px;min-height:42px}
+  .g2,.g3{grid-template-columns:1fr}
+  .kpis{display:grid;grid-template-columns:1fr 1fr}
+  .kpi{min-width:0}
+  .pgrid{grid-template-columns:1fr 1fr}
+  .mov{padding:10px 8px 0}
+  .mox{width:100%;padding:18px 16px}
+  .cl{flex-direction:column}
+  .csb{width:100%;min-height:0;max-height:32vh;border-radius:14px 14px 0 0}
+  .cia{border-radius:0 0 14px 14px}
+  .kcol{min-width:78vw;flex:0 0 78vw}
+  input.fi,select.fi,textarea.fi,.cin{font-size:16px}
+  table{font-size:12px}
+}
 </style>
 </head>
 <body>
+<button class="sbtg" aria-label="Menu" onclick="document.body.classList.toggle('sbo')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="sbov" onclick="document.body.classList.remove('sbo')"></div>
 <div class="app">
 <div class="sb" id="sb">
   <div class="sb-logo"><svg viewBox="0 0 24 24"><path d="M4 10.5h16V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"/><path d="m4 10.5-.8-3.2a1.5 1.5 0 0 1 1.1-1.8L17 2.5a1.5 1.5 0 0 1 1.8 1.1l.8 3.2z"/><path d="m8.6 9.4 2.2-3.9M13.4 8.2l2.2-3.9"/></svg>Sugar Shot</div>
@@ -423,7 +448,7 @@ function setRole(r){S.role=r;if(r==='partner')S.user='Anirudh Venkatachalam';con
 function nav2(v){S.view=v;S.selProj=null;rnav();render();}
 function rnav(){document.getElementById('nav').innerHTML=NAV.filter(n=>!n.off&&n.r.includes(S.role)).map(n=>`<button class="nbtn${n.id===S.view?' on':''}" onclick="nav2('${n.id}')">${n.ic} ${n.lb}</button>`).join('');}
 function syncMaster(){S.cards.filter(c=>!c.del&&['WON','WIP','CLOSED'].includes(c.status)).forEach(card=>{if(!S.MASTER.find(m=>m.cardId===card.id)){const v=card.value,g=Math.round(v*.18);S.MASTER.push({id:S.nid.master++,cardId:card.id,brand:card.client,proj:card.project,cpoc:'',ipoc:card.poc,status:card.status==='CLOSED'?'Completed':card.status==='WON'?'Won':'In Progress',val:v,gst:g,tot:v+g,po:'No',inv:'Not Raised',pay:'Not Paid',date:card.date});}});}
-function render(){if(NAV.find(n=>n.id===S.view)?.off)S.view='dashboard';const t={dashboard:'Dashboard',crm:'CRM Pipeline',projects:'Project Manager',daily:'Daily Updates',chat:'Chat',finance:'Finance',reports:'Reports',reimb:'Reimbursements',leave:'Leave'};document.getElementById('ph-t').textContent=t[S.view]||'';const v=document.getElementById('view');if(S.view==='dashboard')v.innerHTML=rDash();else if(S.view==='crm')v.innerHTML=rCRM();else if(S.view==='projects')v.innerHTML=S.selProj?rPD():rPL();else if(S.view==='daily')v.innerHTML=rDaily();else if(S.view==='chat')v.innerHTML=rChat();else if(S.view==='finance'){syncMaster();v.innerHTML=rFin();}else if(S.view==='reports'){syncMaster();v.innerHTML=rRep();}else if(S.view==='reimb')v.innerHTML=rRmb();else if(S.view==='leave')v.innerHTML=rLv();const pa=document.getElementById('ph-a');if(S.view==='crm'&&S.role==='partner')pa.innerHTML=`<button class="btn btnp" onclick="mAC()">+ Add Deal</button>`;else if(S.view==='projects'&&!S.selProj&&S.role==='partner')pa.innerHTML=`<div style="display:flex;gap:8px"><button class="btn btnp" onclick="mAP()">+ Add Project</button><button class="btn btng" onclick="mAI()">+ Internal</button></div>`;else if(S.view==='reimb')pa.innerHTML=`<button class="btn btnp" onclick="mARmb()">+ Add Reimbursement</button>`;else pa.innerHTML='';setTimeout(()=>{const cm=document.getElementById('chat-msgs');if(cm)cm.scrollTop=cm.scrollHeight;dlyTick();if(S.view==='chat')markRead(S.selCh);},30);}
+function render(){document.body.classList.remove('sbo');if(NAV.find(n=>n.id===S.view)?.off)S.view='dashboard';const t={dashboard:'Dashboard',crm:'CRM Pipeline',projects:'Project Manager',daily:'Daily Updates',chat:'Chat',finance:'Finance',reports:'Reports',reimb:'Reimbursements',leave:'Leave'};document.getElementById('ph-t').textContent=t[S.view]||'';const v=document.getElementById('view');if(S.view==='dashboard')v.innerHTML=rDash();else if(S.view==='crm')v.innerHTML=rCRM();else if(S.view==='projects')v.innerHTML=S.selProj?rPD():rPL();else if(S.view==='daily')v.innerHTML=rDaily();else if(S.view==='chat')v.innerHTML=rChat();else if(S.view==='finance'){syncMaster();v.innerHTML=rFin();}else if(S.view==='reports'){syncMaster();v.innerHTML=rRep();}else if(S.view==='reimb')v.innerHTML=rRmb();else if(S.view==='leave')v.innerHTML=rLv();const pa=document.getElementById('ph-a');if(S.view==='crm'&&S.role==='partner')pa.innerHTML=`<button class="btn btnp" onclick="mAC()">+ Add Deal</button>`;else if(S.view==='projects'&&!S.selProj&&S.role==='partner')pa.innerHTML=`<div style="display:flex;gap:8px"><button class="btn btnp" onclick="mAP()">+ Add Project</button><button class="btn btng" onclick="mAI()">+ Internal</button></div>`;else if(S.view==='reimb')pa.innerHTML=`<button class="btn btnp" onclick="mARmb()">+ Add Reimbursement</button>`;else pa.innerHTML='';setTimeout(()=>{const cm=document.getElementById('chat-msgs');if(cm)cm.scrollTop=cm.scrollHeight;dlyTick();if(S.view==='chat')markRead(S.selCh);},30);}
 function rDash(){syncWIP();const ac=S.cards.filter(c=>!c.del);const wip=S.projects.filter(p=>p.status==='WIP');const cls=S.projects.filter(p=>p.status==='CLOSED');const today=todayStr();const tod=S.daily.filter(u=>u.date===today);const missing=USERS.filter(n2=>!tod.find(u=>u.who===n2));const myUpdDone=!!tod.find(u=>u.who===S.user);
 const dl=wip.filter(p=>p.close).map(p=>({p:p,days:Math.ceil((new Date(p.close+'T23:59:59')-new Date())/864e5)})).sort((a,b)=>a.days-b.days);
 const overdue=dl.filter(x=>x.days<0),soon=dl.filter(x=>x.days>=0&&x.days<=7);

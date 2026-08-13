@@ -35,7 +35,7 @@ const TEAM = [
 // Public holidays (IST dates, 'YYYY-MM-DD') — keep in sync with HOLIDAYS in studio.html.
 const HOLIDAYS = [];
 
-const APP_URL = 'https://signin-delta-amber.vercel.app';
+const APP_URL = 'https://sugarshot-tracker.vercel.app';
 
 function istNow() {
   return new Date(Date.now() + 5.5 * 60 * 60 * 1000); // shift so UTC getters read IST

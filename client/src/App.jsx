@@ -21,26 +21,45 @@ export default function App() {
   // Set when a signup is waiting on the emailed 6-digit code (email
   // confirmation ON). Shows the OTP entry screen for that address.
   const [pendingEmail, setPendingEmail] = useState(null);
-  // Which role to open the Studio OS in — chosen on the sign-in page.
-  // Persisted to localStorage so it survives the Google OAuth redirect.
-  const [role, setRoleState] = useState(
-    () => localStorage.getItem('ss_role') || 'partner'
-  ); // 'partner' | 'employee'
-  const setRole = (r) => {
-    localStorage.setItem('ss_role', r);
-    setRoleState(r);
-  };
-
   useEffect(() => {
     // Grab any existing session on load (survives page refresh)...
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    supabase.auth.getSession().then(({ data }) => {
+      const s = data.session;
+      if (s) {
+        // "Stay signed in" was unticked → the session should not outlive the
+        // browser. sessionStorage dies when the browser/app closes, so a
+        // missing marker means this is a NEW browser session: sign out.
+        const stay = localStorage.getItem('ss_stay') !== '0';
+        const sameBrowserSession = !!sessionStorage.getItem('ss_sess');
+        // Inactivity rule: not opened for 7+ days → sign out automatically.
+        const last = Number(localStorage.getItem('ss_lastseen') || 0);
+        const idleTooLong = last && Date.now() - last > 7 * 24 * 60 * 60 * 1000;
+        if ((!stay && !sameBrowserSession) || idleTooLong) {
+          supabase.auth.signOut();
+          setSession(null);
+          return;
+        }
+      }
+      setSession(s);
+    });
+
+    // Record activity so the 7-day idle logout counts from the LAST visit.
+    const touch = () => {
+      localStorage.setItem('ss_lastseen', String(Date.now()));
+      sessionStorage.setItem('ss_sess', '1');
+    };
+    touch();
+    window.addEventListener('focus', touch);
 
     // ...and keep it in sync on login/logout/token-refresh.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      sub.subscription.unsubscribe();
+      window.removeEventListener('focus', touch);
+    };
   }, []);
 
   // Decide which screen to show. The "just signed up" confirmation takes
@@ -49,7 +68,7 @@ export default function App() {
 
   // Once logged in (and not mid-signup), show the full-screen Studio OS app.
   if (session && !justSignedUp && !pendingEmail) {
-    return <LoggedIn session={session} role={role} />;
+    return <LoggedIn session={session} />;
   }
 
   // Otherwise show the centered auth card (login / signup / signup-success).
@@ -78,8 +97,6 @@ export default function App() {
           <AuthPanel
             onSignedUp={() => setJustSignedUp(true)}
             onPendingOtp={setPendingEmail}
-            role={role}
-            onRole={setRole}
           />
         )}
       </div>
@@ -88,14 +105,11 @@ export default function App() {
 }
 
 /** Login / Sign Up tabbed panel, shown when logged out. */
-function AuthPanel({ onSignedUp, onPendingOtp, role, onRole }) {
+function AuthPanel({ onSignedUp, onPendingOtp }) {
   const [tab, setTab] = useState('login'); // 'login' | 'signup'
 
   return (
     <div className="bg-white rounded-xl shadow p-6">
-      {/* Account type chooser — applies to both Log In and Sign Up. */}
-      <RoleToggle role={role} onRole={onRole} />
-
       {/* Tabs */}
       <div className="flex mb-6 border-b border-slate-200">
         <TabButton active={tab === 'login'} onClick={() => setTab('login')}>
@@ -134,6 +148,11 @@ function GoogleButton() {
 
   async function signIn() {
     setError('');
+    // Google sign-ins behave as "stay signed in" (still subject to the 7-day
+    // inactivity logout in App).
+    localStorage.setItem('ss_stay', '1');
+    sessionStorage.setItem('ss_sess', '1');
+    localStorage.setItem('ss_lastseen', String(Date.now()));
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -167,38 +186,6 @@ function GoogleButton() {
   );
 }
 
-// The two account types. Labels are what the user sees; `value` is the role
-// the Studio OS understands (Supervisor = partner, Expert = employee).
-const ROLE_OPTIONS = [
-  { value: 'partner', label: 'Supervisor' },
-  { value: 'employee', label: 'Expert' },
-];
-
-/** Supervisor / Expert chooser shown at the top of the sign-in page. */
-function RoleToggle({ role, onRole }) {
-  return (
-    <div className="mb-5">
-      <span className="text-sm font-medium text-slate-700">I am a</span>
-      <div className="mt-1 flex gap-2">
-        {ROLE_OPTIONS.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => onRole(value)}
-            className={`flex-1 rounded-md py-2 text-sm font-medium border transition-colors ${
-              role === value
-                ? 'bg-[#FF4C4C] border-[#FF4C4C] text-white'
-                : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function TabButton({ active, onClick, children }) {
   return (
     <button
@@ -218,6 +205,7 @@ function TabButton({ active, onClick, children }) {
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [stay, setStay] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -225,6 +213,12 @@ function LoginForm() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Remember the choice BEFORE the session starts. '0' = sign out when the
+    // browser/app closes; '1' = stay signed in (until 7 idle days).
+    localStorage.setItem('ss_stay', stay ? '1' : '0');
+    sessionStorage.setItem('ss_sess', '1');
+    localStorage.setItem('ss_lastseen', String(Date.now()));
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -238,10 +232,22 @@ function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Field label="Email" type="email" value={email} onChange={setEmail} />
-      <Field label="Password" type="password" value={password} onChange={setPassword} />
+      <Field label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" />
+      <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
+      <label className="flex items-center gap-2 text-sm text-slate-600 select-none cursor-pointer">
+        <input
+          type="checkbox"
+          checked={stay}
+          onChange={(e) => setStay(e.target.checked)}
+          className="w-4 h-4 accent-[#FF4C4C]"
+        />
+        Stay signed in
+      </label>
       {error && <ErrorText>{error}</ErrorText>}
       <SubmitButton loading={loading}>Log In</SubmitButton>
+      <p className="text-xs text-slate-400">
+        You&apos;ll be signed out automatically after 7 days of inactivity.
+      </p>
     </form>
   );
 }
@@ -300,9 +306,9 @@ function SignupForm({ onSignedUp, onPendingOtp }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Field label="Email" type="email" value={email} onChange={setEmail} />
-      <Field label="Password" type="password" value={password} onChange={setPassword} />
-      <Field label="Confirm Password" type="password" value={confirm} onChange={setConfirm} />
+      <Field label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" />
+      <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="new-password" />
+      <Field label="Confirm Password" type="password" value={confirm} onChange={setConfirm} autoComplete="new-password" />
       {error && <ErrorText>{error}</ErrorText>}
       <SubmitButton loading={loading}>Sign Up</SubmitButton>
     </form>
@@ -402,7 +408,7 @@ function SignupSuccess({ onGoToLogin }) {
  * Logged-in view: shows the full-screen Sugar Shot Studio OS (served as a
  * static page from /studio.html) with a small floating Log out button.
  */
-function LoggedIn({ session, role }) {
+function LoggedIn({ session }) {
   // The Studio's own "Log out" button (in its sidebar) posts a message to this
   // parent window; we catch it here and sign out via Supabase.
   useEffect(() => {
@@ -415,12 +421,12 @@ function LoggedIn({ session, role }) {
 
   return (
     <div className="fixed inset-0">
-      {/* The Studio OS prototype fills the whole screen, opened in the role
-          chosen on the sign-in page. Logout lives in its sidebar. */}
+      {/* The Studio OS fills the whole screen. One common experience for the
+          whole team — no Supervisor/Expert split. Logout lives in its sidebar. */}
       {/* `v` is a cache-buster: bump STUDIO_V whenever studio.html changes so
           every browser fetches the new build without needing a hard refresh. */}
       <iframe
-        src={`/studio.html?role=${role}&v=${STUDIO_V}`}
+        src={`/studio.html?role=partner&v=${STUDIO_V}`}
         title="Sugar Shot Studio OS"
         className="w-full h-full border-0"
       />
@@ -430,7 +436,7 @@ function LoggedIn({ session, role }) {
 
 /* ---------- Small shared UI helpers ---------- */
 
-function Field({ label, type, value, onChange }) {
+function Field({ label, type, value, onChange, autoComplete }) {
   return (
     <label className="block">
       <span className="text-sm font-medium text-slate-700">{label}</span>
@@ -438,6 +444,7 @@ function Field({ label, type, value, onChange }) {
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete}
         required
         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-[#FF4C4C] focus:ring-1 focus:ring-[#FF4C4C] outline-none"
       />

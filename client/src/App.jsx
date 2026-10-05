@@ -104,27 +104,14 @@ export default function App() {
   );
 }
 
-/** Login / Sign Up tabbed panel, shown when logged out. */
+/** Login panel, shown when logged out. (Sign Up is hidden for now — accounts
+ *  are created via Google sign-in or by re-enabling the SignupForm below.) */
 function AuthPanel({ onSignedUp, onPendingOtp }) {
-  const [tab, setTab] = useState('login'); // 'login' | 'signup'
-
   return (
     <div className="bg-white rounded-xl shadow p-6">
-      {/* Tabs */}
-      <div className="flex mb-6 border-b border-slate-200">
-        <TabButton active={tab === 'login'} onClick={() => setTab('login')}>
-          Log In
-        </TabButton>
-        <TabButton active={tab === 'signup'} onClick={() => setTab('signup')}>
-          Sign Up
-        </TabButton>
-      </div>
+      <h2 className="text-lg font-semibold text-slate-800 mb-5">Log In</h2>
 
-      {tab === 'login' ? (
-        <LoginForm />
-      ) : (
-        <SignupForm onSignedUp={onSignedUp} onPendingOtp={onPendingOtp} />
-      )}
+      <LoginForm />
 
       {/* --- Google SSO (Workspace accounts) --- */}
       <div className="flex items-center gap-3 my-5">

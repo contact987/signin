@@ -291,9 +291,34 @@ const TYPES=['Brand Film','Reels','Documentary','Testimonial','Podcast','Animati
 const LTYPES=['Sick Leave','Planned Leave','Emergency Leave','On Shoot','Work from Home','Comp Off','Optional Holiday'];
 // Optional/restricted holidays — must be REQUESTED (Leave tab) to avail.
 // Fill from the official calendar: {d:'YYYY-MM-DD', name:'...'}
-const OPT_HOLIDAYS=[];
+const OPT_HOLIDAYS=[ // request in the Leave tab to avail ("Any other festival" = ask via Request Leave / Missed-a-Day)
+ {d:'2026-08-14',name:'Janmashtami'},
+ {d:'2026-08-26',name:'Id-E-Milad'},
+ {d:'2026-09-14',name:'Ganesh Chaturthi'},
+ {d:'2026-09-21',name:'Onam'},
+ {d:'2026-11-02',name:'Naraka Chaturdashi'},
+ {d:'2026-11-10',name:'Balipadyami'},
+ {d:'2026-11-24',name:'Guru Nanak Jayanti'},
+ {d:'2026-11-27',name:'Kanakadasa Jayanthi'},
+ {d:'2027-01-14',name:'Makara Sankranti / Pongal'},
+ {d:'2027-03-06',name:'Maha Shivaratri'},
+ {d:'2027-03-26',name:'Good Friday'},
+ {d:'2027-04-07',name:'Ugadi'},
+ {d:'2027-04-14',name:'Ambedkar Jayanthi'},
+ {d:'2027-04-19',name:'Mahavir Jayanthi'},
+];
 // Company public holidays (YYYY-MM-DD). Sundays are always holidays automatically.
-const HOLIDAYS=[];
+const HOLIDAYS=[ // Sugar Shot Pvt Ltd 26-27 official holiday list
+ '2026-05-01', // May Day (Labour Day)
+ '2026-08-15', // Independence Day
+ '2026-10-02', // Gandhi Jayanthi
+ '2026-10-20', // Mahanavami / Ayudhapooja
+ '2026-11-01', // Karnataka Rajyotsava
+ '2026-11-08', // Deepavali (Diwali)
+ '2026-12-25', // Christmas
+ '2027-01-01', // New Year's Day
+ '2027-01-26', // Republic Day
+];
 const PSTATUS=['Won','In Progress','Completed','On Hold','Cancelled'];
 const POCS=['Prithvi Dhondaley','Anirudh Venkatachalam','Sandeep Sugumaran'];
 const REFS=['New Client','Existing Client'];

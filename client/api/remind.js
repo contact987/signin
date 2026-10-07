@@ -28,8 +28,7 @@ const TEAM = [
   { name: 'Sean Somanna',           email: null },
   { name: 'Aasish Suresh',          email: 'contact@sugarshotfilms.com' },
   { name: 'Aparajitha Rajaram',     email: null },
-  { name: 'Ivan Prince',            email: null },
-  { name: 'Rahul KD',               email: null },
+  { name: 'Raghu',                  email: null },
 ];
 
 // Public holidays (IST dates, 'YYYY-MM-DD') — keep in sync with HOLIDAYS in studio.html.

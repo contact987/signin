@@ -26,8 +26,7 @@ insert into public.allowed_emails (email) values
   -- ,('sean@sugarshotfilms.com')         -- Sean Somanna
   -- ,('aasish@sugarshotfilms.com')       -- Aasish Suresh
   -- ,('aparajitha@sugarshotfilms.com')   -- Aparajitha Rajaram
-  -- ,('ivan@sugarshotfilms.com')         -- Ivan Prince
-  -- ,('rahul@sugarshotfilms.com')        -- Rahul KD
+  -- ,('raghu@sugarshotfilms.com')        -- Raghu
 on conflict (email) do nothing;
 
 -- 3. Tighten the signup trigger to require allowlist membership -------------

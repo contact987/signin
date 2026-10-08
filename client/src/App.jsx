@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 // Version tag for the embedded Studio (client/public/studio.html). Bump this
 // whenever studio.html changes — it cache-busts the iframe so every browser
 // picks up the new build on a normal reload (no hard refresh needed).
-const STUDIO_V = '2026-10-08-3';
+const STUDIO_V = '2026-10-08-4';
 
 export default function App() {
   // The current Supabase session (null when logged out).
@@ -106,7 +106,7 @@ function GoogleSignInCard() {
       provider: 'google',
       options: {
         redirectTo: window.location.origin,
-        queryParams: { hd: 'sugarshotfilms.com', prompt: 'select_account' },
+        queryParams: { prompt: 'select_account' },
       },
     });
     setLoading(false);
@@ -116,7 +116,7 @@ function GoogleSignInCard() {
   return (
     <div className="bg-white rounded-xl shadow p-6 space-y-4">
       <p className="text-sm text-slate-600 text-center">
-        Sign in with your <strong>@sugarshotfilms.com</strong> Google account.
+        Sign in with your <strong>Sugar Shot office</strong> Google account.
       </p>
       <button
         type="button"

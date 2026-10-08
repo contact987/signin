@@ -3,8 +3,9 @@
 --
 -- Account creation (incl. first Google sign-in) is only allowed for the EXACT
 -- addresses below. Everything else is rejected inside the database, so it
--- cannot be bypassed by calling the auth API directly. Excluded on purpose:
--- ivan@, shivani@, finance@ and all @sugarbomb.in accounts.
+-- cannot be bypassed by calling the auth API directly. The EXACT list is the
+-- only rule (so aparajitha@sugarbomb.in works). Excluded on purpose: ivan@,
+-- shivani@, finance@ and every other address.
 
 -- 1. The allowlist table ----------------------------------------------------
 create table if not exists public.allowed_emails (
@@ -22,7 +23,8 @@ insert into public.allowed_emails (email) values
   ('prithvi@sugarshotfilms.com'),   -- Prithvi Dhondaley
   ('raaghu@sugarshotfilms.com'),    -- Raaghu Raj (note the double a)
   ('sandeep@sugarshotfilms.com'),   -- Sandeep Sugumaran
-  ('sean@sugarshotfilms.com')       -- Sean Somanna
+  ('sean@sugarshotfilms.com'),      -- Sean Somanna
+  ('aparajitha@sugarbomb.in')       -- Aparajitha Rajaram (sister-company domain, same Workspace)
 on conflict (email) do nothing;
 
 -- 3. Tighten the signup trigger to require allowlist membership -------------
@@ -33,7 +35,6 @@ security definer
 as $$
 begin
   if new.email is null
-     or lower(new.email) not like '%@sugarshotfilms.com'
      or not exists (select 1 from public.allowed_emails a
                     where lower(a.email) = lower(new.email)) then
     raise exception 'This email is not an approved Sugar Shot office account';

@@ -25,7 +25,6 @@ const TEAM = [
   { name: 'Sandeep Sugumaran',      email: 'sandeep@sugarshotfilms.com' }, // e.g. 'sandeep@sugarshotfilms.com'
   { name: 'Anirudh Venkatachalam',  email: 'anirudh@sugarshotfilms.com' },
   { name: 'Prithvi Dhondaley',      email: 'prithvi@sugarshotfilms.com' },
-  { name: 'Sean Somanna',           email: 'sean@sugarshotfilms.com' },
   { name: 'Aasish Suresh',          email: 'aasish@sugarshotfilms.com' },
   { name: 'Aparajitha Rajaram',     email: 'aparajitha@sugarbomb.in' },
   { name: 'Raaghu Raj',             email: 'raaghu@sugarshotfilms.com' },

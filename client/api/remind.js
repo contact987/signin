@@ -22,13 +22,13 @@ import { supabase } from './_lib.js';
 // EDIT ME: the team roster. `name` must exactly match the name shown in Studio OS.
 // Set email to null to skip someone (e.g. until their address is confirmed).
 const TEAM = [
-  { name: 'Sandeep Sugumaran',      email: null }, // e.g. 'sandeep@sugarshotfilms.com'
-  { name: 'Anirudh Venkatachalam',  email: null },
-  { name: 'Prithvi Dhondaley',      email: null },
-  { name: 'Sean Somanna',           email: null },
-  { name: 'Aasish Suresh',          email: 'contact@sugarshotfilms.com' },
+  { name: 'Sandeep Sugumaran',      email: 'sandeep@sugarshotfilms.com' }, // e.g. 'sandeep@sugarshotfilms.com'
+  { name: 'Anirudh Venkatachalam',  email: 'anirudh@sugarshotfilms.com' },
+  { name: 'Prithvi Dhondaley',      email: 'prithvi@sugarshotfilms.com' },
+  { name: 'Sean Somanna',           email: 'sean@sugarshotfilms.com' },
+  { name: 'Aasish Suresh',          email: 'aasish@sugarshotfilms.com' },
   { name: 'Aparajitha Rajaram',     email: null },
-  { name: 'Raghu',                  email: null },
+  { name: 'Raaghu Raj',             email: 'raaghu@sugarshotfilms.com' },
 ];
 
 // Public holidays (IST dates, 'YYYY-MM-DD') — keep in sync with HOLIDAYS in studio.html.

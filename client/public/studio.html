@@ -280,7 +280,7 @@ input[type=number].fi{-moz-appearance:textfield;appearance:textfield}
 <div class="ctx" id="ctx"></div>
 <div class="cf" id="cf" style="display:none"></div>
 <script>
-const USERS=['Sandeep Sugumaran','Anirudh Venkatachalam','Prithvi Dhondaley','Sean Somanna','Aasish Suresh','Aparajitha Rajaram','Raghu'];
+const USERS=['Sandeep Sugumaran','Anirudh Venkatachalam','Prithvi Dhondaley','Sean Somanna','Aasish Suresh','Aparajitha Rajaram','Raaghu Raj'];
 const fmt=n=>'₹'+Number(n||0).toLocaleString('en-IN');
 const todayStr=()=>{const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');};
 const ini=n=>n.split(' ').map(w=>w[0]).join('').substr(0,2).toUpperCase();
@@ -451,7 +451,7 @@ const S={
     {id:6,who:'Rahul KD',text:'Backed up all Crimson footage.',date:'2026-07-03',time:'8:00 PM',eh:[]},
   ],
   chs:[
-    {id:1,name:'general',members:['Anirudh Venkatachalam','Prithvi Dhondaley','Sean Somanna','Aparajitha Rajaram','Aasish Suresh','Raghu','Sandeep Sugumaran'],admins:['Anirudh Venkatachalam'],msgs:[
+    {id:1,name:'general',members:['Anirudh Venkatachalam','Prithvi Dhondaley','Sean Somanna','Aparajitha Rajaram','Aasish Suresh','Raaghu Raj','Sandeep Sugumaran'],admins:['Anirudh Venkatachalam'],msgs:[
       {id:1,from:'Anirudh Venkatachalam',text:'Welcome to Sugar Shot! 🎬',time:'9:00 AM',date:'Jul 1',rx:{},tags:[]},
       {id:2,from:'Prithvi Dhondaley',text:'Ready to go!',time:'9:05 AM',date:'Jul 1',rx:{'👍':['Anirudh Venkatachalam','Sean Somanna']},tags:[]},
     ]},
@@ -810,7 +810,7 @@ let SB=null,SBuser=null,SBuid=null,chatLive=false,rmbLive=false,dailyLive=false,
 window.SBname='';
 try{if(window.supabase&&window.supabase.createClient)SB=window.supabase.createClient(SB_URL,SB_KEY);}catch(e){}
 // Logins whose email prefix doesn't match a team member's first name.
-const EMAIL_NAMES={'contact@sugarshotfilms.com':'Aasish Suresh'};
+const EMAIL_NAMES={'contact@sugarshotfilms.com':'Aasish Suresh','raaghu@sugarshotfilms.com':'Raaghu Raj'};
 function resolveName(raw){if(!raw)return'';const r=String(raw).trim().toLowerCase();const first=r.split(/[\s@.]+/)[0];const hit=USERS.find(u=>{const ul=u.toLowerCase();return ul===r||ul.split(' ')[0]===first;});return hit||String(raw).trim().replace(/(^|\s)\w/g,c=>c.toUpperCase());}
 function mapMsg(r,rxRows){const d=new Date(r.created_at);const rx={};(rxRows||[]).filter(x=>x.message_id===r.id).forEach(x=>{(rx[x.emoji]=rx[x.emoji]||[]).push(x.author);});return{id:r.id,from:r.author,text:r.text,time:d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}),date:d.toLocaleDateString('en',{month:'short',day:'numeric'}),rx:rx,tags:r.tags||[],edited:!!r.edited};}
 function findLiveMsg(mid){for(const c of S.chs){const m=c.msgs.find(x=>x.id===mid);if(m)return m;}return null;}

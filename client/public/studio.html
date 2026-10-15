@@ -912,17 +912,16 @@ function mEVt(id){const v=id?S.vault.find(x=>x.id===id):null;
  sm(`<div class="mot">${v?'✏️ Edit':'🔑 Add'} Credential</div>
  <div class="fr"><div class="fg"><label class="fl">Service *</label><input class="fi" id="vt-s" value="${v?esc(v.service):''}" placeholder="e.g. Envato Elements"></div><div class="fg"><label class="fl">URL</label><input class="fi" id="vt-u" value="${v?esc(v.url):''}" placeholder="https://…"></div></div>
  <div class="fr"><div class="fg"><label class="fl">Login (email / username)</label><input class="fi" id="vt-l" value="${v?esc(v.login):''}" autocomplete="off"></div><div class="fg"><label class="fl">Password</label><input class="fi" id="vt-p" value="${v?esc(v.password):''}" autocomplete="off" style="font-family:monospace"></div></div>
- <div class="fg"><label class="fl">Notes</label><input class="fi" id="vt-n" value="${v?esc(v.notes):''}" placeholder="plan, who pays, renewal date…"></div>
  ${v&&(v.edits||[]).length?`<div style="margin-top:4px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;margin-bottom:4px">Change history</div>${v.edits.slice(-6).reverse().map(h=>`<div style="font-size:11px;color:#6B7280;padding:2px 0">• <strong>${esc(h.by.split(' ')[0])}</strong> ${esc(h.what)} — ${vtWhen(h.at)}</div>`).join('')}</div>`:''}
  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btng" onclick="hm()">Cancel</button><button class="btn btnp" onclick="sbEVt(${id||0})">Save</button></div>`);}
 function sbEVt(id){const g=k=>document.getElementById(k)?.value.trim()||'';const svc=g('vt-s');if(!svc){alert('Service name is required.');return;}
  const now=new Date().toISOString();
- if(id){const v=S.vault.find(x=>x.id===id);if(!v)return;const ch=[];if(svc!==v.service)ch.push('service');if(g('vt-u')!==v.url)ch.push('URL');if(g('vt-l')!==v.login)ch.push('login');if(g('vt-p')!==v.password)ch.push('password');if(g('vt-n')!==v.notes)ch.push('notes');
-  v.service=svc;v.url=g('vt-u');v.login=g('vt-l');v.password=g('vt-p');v.notes=g('vt-n');
+ if(id){const v=S.vault.find(x=>x.id===id);if(!v)return;const ch=[];if(svc!==v.service)ch.push('service');if(g('vt-u')!==v.url)ch.push('URL');if(g('vt-l')!==v.login)ch.push('login');if(g('vt-p')!==v.password)ch.push('password');
+  v.service=svc;v.url=g('vt-u');v.login=g('vt-l');v.password=g('vt-p');
   if(ch.length){v.edits=v.edits||[];v.edits.push({by:S.user,at:now,what:'changed '+ch.join(', ')});if(v.edits.length>20)v.edits=v.edits.slice(-20);v.updatedBy=S.user;v.updatedAt=now;}
-  if(vLive)SB.from('vault').update({service:v.service,url:v.url,login:v.login,password:v.password,notes:v.notes,updated_by:v.updatedBy,updated_at:v.updatedAt,edits:v.edits||[]}).eq('id',id).then(({error})=>{if(error)console.warn('vault sync failed:',error.message);});
+  if(vLive)SB.from('vault').update({service:v.service,url:v.url,login:v.login,password:v.password,updated_by:v.updatedBy,updated_at:v.updatedAt,edits:v.edits||[]}).eq('id',id).then(({error})=>{if(error)console.warn('vault sync failed:',error.message);});
   hm();render();return;}
- const nv={service:svc,url:g('vt-u'),login:g('vt-l'),password:g('vt-p'),notes:g('vt-n'),updatedBy:S.user,updatedAt:now,edits:[{by:S.user,at:now,what:'created'}]};
+ const nv={service:svc,url:g('vt-u'),login:g('vt-l'),password:g('vt-p'),notes:'',updatedBy:S.user,updatedAt:now,edits:[{by:S.user,at:now,what:'created'}]};
  if(vLive){SB.from('vault').insert({service:nv.service,url:nv.url,login:nv.login,password:nv.password,notes:nv.notes,updated_by:S.user,updated_at:now,edits:nv.edits}).select().single().then(({data,error})=>{if(error){alert('Could not save: '+error.message);return;}if(data&&!S.vault.find(x=>x.id===data.id))S.vault.push(mapVt(data));render();});hm();return;}
  S.vault.push({id:S.nid.vt++,...nv});hm();render();}
 function dVt(id){const v=S.vault.find(x=>x.id===id);if(!v)return;if(!confirm('Delete the '+v.service+' credential for everyone?'))return;S.vault=S.vault.filter(x=>x.id!==id);if(vLive)SB.from('vault').delete().eq('id',id).then(({error})=>{if(error)console.warn('vault delete failed:',error.message);});render();}

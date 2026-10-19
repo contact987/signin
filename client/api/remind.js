@@ -66,6 +66,15 @@ export default async function handler(req, res) {
   }
 
   const posted = new Set((data || []).map(r => r.author));
+
+  // People on APPROVED leave today are off — no reminder for them.
+  const { data: lvs } = await supabase
+    .from('leaves')
+    .select('author')
+    .eq('status', 'Approved')
+    .lte('from_d', today)
+    .gte('to_d', today);
+  (lvs || []).forEach(l => posted.add(l.author));
   const missing = TEAM.filter(t => !posted.has(t.name));
   const toEmail = missing.filter(t => t.email);
   const skippedNoEmail = missing.filter(t => !t.email).map(t => t.name);

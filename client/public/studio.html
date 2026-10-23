@@ -320,36 +320,38 @@ const CC={ENQUIRIES:{bg:'#EEF2FF',bd:'#818CF8',tx:'#4338CA',em:'📥'},'ESTIMATE
 const EMOJIS=['👍','❤️','😂','🎉','🔥','✅','👀','💯','🙌','👏','💪','🚀','🎬','💡','⚡'];
 const TYPES=['Brand Film','Reels','Documentary','Testimonial','Podcast','Animation','Product Film'];
 const LTYPES=['Sick Leave','Planned Leave','Emergency Leave','On Shoot','Work from Home','Comp Off','Optional Holiday'];
-const HOL_NAMES={'2026-05-01':'May Day (Labour Day)','2026-08-15':'Independence Day','2026-10-02':'Gandhi Jayanthi','2026-10-20':'Mahanavami / Ayudhapooja','2026-11-01':'Karnataka Rajyotsava','2026-11-08':'Deepavali (Diwali)','2026-12-25':'Christmas','2027-01-01':"New Year's Day",'2027-01-26':'Republic Day'};
+const HOL_NAMES={'2026-01-26':'Republic Day','2026-08-15':'Independence Day','2026-08-26':'Milad-un-Nabi / Id-e-Milad','2026-09-04':'Janmashtami','2026-10-02':'Gandhi Jayanti','2026-10-20':'Dussehra','2026-11-01':'Karnataka Rajyotsava','2026-11-08':'Diwali','2026-12-25':'Christmas Day'};
 // Optional/restricted holidays — must be REQUESTED (Leave tab) to avail.
 // Fill from the official calendar: {d:'YYYY-MM-DD', name:'...'}
-const OPT_HOLIDAYS=[ // request in the Leave tab to avail ("Any other festival" = ask via Request Leave / Missed-a-Day)
- {d:'2026-08-14',name:'Janmashtami'},
- {d:'2026-08-26',name:'Id-E-Milad'},
+const OPT_HOLIDAYS=[ // optional — request in the Leave tab to avail (per the 2026 Holiday Tracker)
+ {d:'2026-01-14',name:'Makar Sankranti / Magha Bihu / Pongal'},
+ {d:'2026-03-04',name:'Holi'},
+ {d:'2026-03-19',name:'Ugadi'},
+ {d:'2026-03-21',name:'Id-ul-Fitr'},
+ {d:'2026-03-26',name:'Ram Navami'},
+ {d:'2026-03-31',name:'Mahavir Jayanti'},
+ {d:'2026-04-03',name:'Good Friday'},
+ {d:'2026-04-14',name:"Dr. B.R. Ambedkar's Birthday / Vaisakhi / Vishu (Tamil New Year)"},
+ {d:'2026-05-01',name:'Budha Purnima'},
+ {d:'2026-05-28',name:'Id-ul-Zuha (Bakrid)'},
+ {d:'2026-06-26',name:'Muharram'},
+ {d:'2026-08-28',name:'Raksha Bandhan'},
  {d:'2026-09-14',name:'Ganesh Chaturthi'},
- {d:'2026-09-21',name:'Onam'},
- {d:'2026-11-02',name:'Naraka Chaturdashi'},
- {d:'2026-11-10',name:'Balipadyami'},
- {d:'2026-11-24',name:'Guru Nanak Jayanti'},
- {d:'2026-11-27',name:'Kanakadasa Jayanthi'},
- {d:'2027-01-14',name:'Makara Sankranti / Pongal'},
- {d:'2027-03-06',name:'Maha Shivaratri'},
- {d:'2027-03-26',name:'Good Friday'},
- {d:'2027-04-07',name:'Ugadi'},
- {d:'2027-04-14',name:'Ambedkar Jayanthi'},
- {d:'2027-04-19',name:'Mahavir Jayanthi'},
+ {d:'2026-09-19',name:'Dussehra (Mahashtami)'},
+ {d:'2026-09-29',name:'Karwa Chouth'},
+ {d:'2026-12-24',name:'Christmas Eve'},
 ];
 // Company public holidays (YYYY-MM-DD). Sundays are always holidays automatically.
-const HOLIDAYS=[ // Sugar Shot Pvt Ltd 26-27 official holiday list
- '2026-05-01', // May Day (Labour Day)
+const HOLIDAYS=[ // Sugar Shot Pvt Ltd 2026 Holiday Tracker (gazetted / mandatory)
+ '2026-01-26', // Republic Day
  '2026-08-15', // Independence Day
- '2026-10-02', // Gandhi Jayanthi
- '2026-10-20', // Mahanavami / Ayudhapooja
+ '2026-08-26', // Milad-un-Nabi / Id-e-Milad
+ '2026-09-04', // Janmashtami (Vaishnva)
+ '2026-10-02', // Gandhi Jayanti
+ '2026-10-20', // Dussehra
  '2026-11-01', // Karnataka Rajyotsava
- '2026-11-08', // Deepavali (Diwali)
- '2026-12-25', // Christmas
- '2027-01-01', // New Year's Day
- '2027-01-26', // Republic Day
+ '2026-11-08', // Diwali
+ '2026-12-25', // Christmas Day
 ];
 const PSTATUS=['Won','In Progress','Completed','On Hold','Cancelled'];
 const POCS=['Prithvi Dhondaley','Anirudh Venkatachalam','Sandeep Sugumaran'];

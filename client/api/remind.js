@@ -32,8 +32,8 @@ const TEAM = [
 
 // Public holidays (IST dates, 'YYYY-MM-DD') — keep in sync with HOLIDAYS in studio.html.
 const HOLIDAYS = [
-  '2026-05-01', '2026-08-15', '2026-10-02', '2026-10-20', '2026-11-01',
-  '2026-11-08', '2026-12-25', '2027-01-01', '2027-01-26',
+  '2026-01-26', '2026-08-15', '2026-08-26', '2026-09-04', '2026-10-02',
+  '2026-10-20', '2026-11-01', '2026-11-08', '2026-12-25',
 ];
 
 const APP_URL = 'https://sugarshot-tracker.vercel.app';

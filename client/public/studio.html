@@ -284,13 +284,13 @@ input[type=number].fi{-moz-appearance:textfield;appearance:textfield}
 <div class="ctx" id="ctx"></div>
 <div class="cf" id="cf" style="display:none"></div>
 <script>
-const USERS=['Sandeep Sugumaran','Anirudh Venkatachalam','Prithvi Dhondaley','Sean Somanna','Aasish Suresh','Aparajitha Rajaram','Raaghu Raj'];
+const USERS=['Sandeep Sugumaran','Anirudh Venkatachalam','Prithvi Dhondaley','Aasish Suresh','Aparajitha Rajaram','Raaghu Raj'];
 /* ===== PER-PERSON ACCESS (set by Aasish 2026-10-08) =====
    contact@ = admin, sees everything. Tabs not listed here = everyone. */
 const ADMIN_EMAILS=['contact@sugarshotfilms.com'];
 window._isAdmin=true; // demo/preview default; set from the real login in chatInit
 const TAB_ACCESS={
-  crm:['Sandeep Sugumaran','Anirudh Venkatachalam','Prithvi Dhondaley','Aasish Suresh'],
+  crm:['Sandeep Sugumaran','Anirudh Venkatachalam','Prithvi Dhondaley'],
   daily:USERS.filter(u=>u!=='Sean Somanna'),
 };
 const canTab=id=>window._isAdmin||!TAB_ACCESS[id]||TAB_ACCESS[id].includes(S.user);

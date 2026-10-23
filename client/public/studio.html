@@ -754,6 +754,9 @@ function mARmb(eid){_rmbFile=null;const e=eid?S.reimbs.find(x=>x.id===eid):null;
   <div class="fg"><label class="fl">${e&&e.bill?`Replace bill (current: ${e.bill}) — optional`:'Attach bill (photo / PDF) — optional'}</label><input class="fi" id="rm-bill" type="file" accept="image/*,.pdf" onchange="_rmbFile=this.files[0]?{name:this.files[0].name,url:URL.createObjectURL(this.files[0]),file:this.files[0]}:null" style="padding:7px 10px"></div>
   <div style="font-size:11px;color:#9CA3AF;margin:-4px 0 10px">No bill handy? Leave it empty and just enter the <strong>total amount</strong> — you can note "combined total" in the description.</div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn btng" onclick="hm()">Cancel</button><button class="btn btnp" onclick="sbARmb(${eid||''})">${e?'Save Changes':'Submit Claim'}</button></div>`);}
+const DRIVE_BACKUP_URL='';// Apps Script web-app URL — when set, every uploaded bill is also copied to the shared Drive folder (see server/drive_backup.gs)
+function driveBackup(file,name){if(!DRIVE_BACKUP_URL||!file)return;try{const rd=new FileReader();rd.onload=()=>{const b64=String(rd.result).split(',')[1];fetch(DRIVE_BACKUP_URL,{method:'POST',body:JSON.stringify({name:name,mime:file.type||'application/octet-stream',b64:b64})}).then(r=>r.json()).then(j=>{if(!j||!j.ok)console.warn('Drive backup failed:',j&&j.error);}).catch(e=>console.warn('Drive backup failed:',e));};rd.readAsDataURL(file);}catch(e){console.warn('Drive backup failed:',e);}}
+function billDriveName(dt,who,cat,amt,orig){return(dt+'_'+String(who).replace(/\s+/g,'')+'_'+cat+'_Rs'+amt+'_'+orig).replace(/[^\w.\-₹]/g,'_');}
 function sbARmb(eid){const desc=document.getElementById('rm-desc')?.value.trim();const amt=parseInt(document.getElementById('rm-amt')?.value)||0;if(!desc){alert('Describe what the expense was for.');return;}if(amt<=0){alert('Enter the amount.');return;}
   const cat=document.getElementById('rm-cat').value,dt=document.getElementById('rm-dt').value||todayStr(),prj=document.getElementById('rm-prj').value||'';const f=_rmbFile;_rmbFile=null;S.reimbTab='mine';hm();
   if(eid){const r=S.reimbs.find(x=>x.id===eid);if(!r||r.status!=='Pending'){alert('Only pending claims can be edited.');return;}
@@ -761,14 +764,14 @@ function sbARmb(eid){const desc=document.getElementById('rm-desc')?.value.trim()
     render();
     if(rmbLive){(async()=>{try{
       const up={cat:cat,descr:desc,amount:amt,date:dt,proj:prj};
-      if(f&&f.file){const bp=SBuid+'/'+Date.now()+'_'+f.name.replace(/[^\w.\-]/g,'_');const {error:ue}=await SB.storage.from('bills').upload(bp,f.file);if(ue)throw ue;up.bill=f.name;up.bill_path=bp;r.billPath=bp;const {data:u2}=await SB.storage.from('bills').createSignedUrl(bp,3600);if(u2)r.billUrl=u2.signedUrl;}
+      if(f&&f.file){const bp=SBuid+'/'+Date.now()+'_'+f.name.replace(/[^\w.\-]/g,'_');const {error:ue}=await SB.storage.from('bills').upload(bp,f.file);if(ue)throw ue;driveBackup(f.file,billDriveName(dt,S.user,cat,amt,f.name));up.bill=f.name;up.bill_path=bp;r.billPath=bp;const {data:u2}=await SB.storage.from('bills').createSignedUrl(bp,3600);if(u2)r.billUrl=u2.signedUrl;}
       const {error}=await SB.from('reimbursements').update(up).eq('id',eid);if(error)throw error;
       if(S.view==='reimb')render();
     }catch(e2){alert('Edit not saved: '+(e2&&e2.message||e2));}})();}
     return;}
   if(rmbLive){(async()=>{try{
     let billName=null,billPath=null;
-    if(f&&f.file){billName=f.name;billPath=SBuid+'/'+Date.now()+'_'+f.name.replace(/[^\w.\-]/g,'_');const {error:ue}=await SB.storage.from('bills').upload(billPath,f.file);if(ue)throw ue;}
+    if(f&&f.file){billName=f.name;billPath=SBuid+'/'+Date.now()+'_'+f.name.replace(/[^\w.\-]/g,'_');const {error:ue}=await SB.storage.from('bills').upload(billPath,f.file);if(ue)throw ue;driveBackup(f.file,billDriveName(dt,S.user,cat,amt,f.name));}
     const {data,error}=await SB.from('reimbursements').insert({user_id:SBuid,who:S.user,cat:cat,descr:desc,amount:amt,date:dt,proj:prj,bill:billName,bill_path:billPath,status:'Pending'}).select().single();
     if(error)throw error;
     if(!S.reimbs.find(r=>r.id===data.id)){const rr=mapRmb(data);if(rr.billPath){const {data:u}=await SB.storage.from('bills').createSignedUrl(rr.billPath,3600);if(u)rr.billUrl=u.signedUrl;}S.reimbs.push(rr);}
